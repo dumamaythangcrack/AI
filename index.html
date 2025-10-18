@@ -304,25 +304,52 @@ document.addEventListener("paste",e=>{
 });
 
 async function sendMessage(){
-  const text=input.value.trim();
+  const text = input.value.trim();
   if(!text && selectedImages.length===0) return;
-  addMessage(text||"📷 Ảnh","user",false,selectedImages);
+
+  // Thêm message của user
+  addMessage(text||"📷 Ảnh", "user", false, selectedImages);
   input.value="";
-  const typingMsg=addMessage("", "ai", true);
+
+  // Hiển thị spinner AI
+  const typingMsg = addMessage("", "ai", true);
+
   try{
-    const parts=[];
-    selectedImages.forEach(img=>parts.push({inline_data:{mime_type:"image/png",data:img.split(",")[1]}}));
+    const parts = [];
+
+    // Nếu có ảnh, thêm vào đầu System Prompt + hình ảnh
+    if(selectedImages.length > 0){
+      // System Prompt riêng cho Vision Mode
+      parts.push({text:"Bạn là AI đa năng, có khả năng phân tích hình ảnh, mô tả chi tiết và kết hợp với văn bản người dùng."});
+    }
+
+    // Thêm tất cả ảnh
+    selectedImages.forEach(img=>{
+      parts.push({inline_data:{mime_type:"image/png",data:img.split(",")[1]}});
+    });
+
+    // Thêm text người dùng
     if(text) parts.push({text});
-    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}]})});
-    const data=await res.json();
+
+    // Gọi API
+    const res = await fetch(endpoint,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts}]})
+    });
+
+    const data = await res.json();
     typingMsg.remove();
-    const reply=data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi từ AI.";
-    addMessage(reply,"ai");
+
+    const reply = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join("\n") || "⚠️ Không có phản hồi từ AI.";
+    addMessage(reply, "ai");
+
   }catch(err){
     typingMsg.remove();
-    addMessage("❌ Lỗi kết nối hoặc key không hợp lệ.","ai");
+    addMessage("❌ Lỗi kết nối hoặc key không hợp lệ.", "ai");
   }
-  selectedImages=[];
+
+  selectedImages = [];
 }
 
 sendBtn.onclick=sendMessage;
@@ -339,3 +366,4 @@ window.onclick=e=>{if(e.target===infoModal) infoModal.classList.remove("show");}
 </script>
 </body>
 </html>
+
