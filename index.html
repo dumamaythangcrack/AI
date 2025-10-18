@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat - Next Level</title>
+<title>TTK AI Chat - Cyberpunk</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
 <style>
 :root{
@@ -29,7 +29,7 @@ body{
   overflow:hidden;
   position:relative;
   transition:0.6s;
-  perspective: 1000px;
+  perspective:1000px;
 }
 
 /* Hình nền gradient 3D tương tác theo chuột */
@@ -85,8 +85,16 @@ header span{font-size:0.9em;opacity:0.7;}
 #messages::-webkit-scrollbar{width:8px;}
 #messages::-webkit-scrollbar-thumb{background:var(--accent);border-radius:10px;}
 
-/* Message bubble nâng cấp animation */
-.message{display:flex;max-width:75%;opacity:0;transform:translateY(30px);animation:slideUp 0.5s forwards;}
+/* Bubble + animation + Cyberpunk shine */
+.message{
+  display:flex;
+  max-width:75%;
+  opacity:0;
+  transform:translateY(30px);
+  animation:slideUp 0.5s forwards;
+  position:relative;
+  transition:0.3s;
+}
 .message.user{align-self:flex-end;justify-content:flex-end;}
 .message.ai{align-self:flex-start;justify-content:flex-start;}
 .bubble{
@@ -100,12 +108,33 @@ header span{font-size:0.9em;opacity:0.7;}
   gap:8px;
   backdrop-filter:blur(10px);
   position:relative;
+  transition:0.2s, box-shadow 0.2s, transform 0.2s;
+  overflow:hidden;
 }
 .user .bubble{background:var(--bubble-user-dark);color:#fff;}
 .ai .bubble{background:var(--bubble-ai-dark);color:var(--text-dark);}
+.bubble::before{
+  content:"";
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  background: radial-gradient(circle at 50% 50%, rgba(0,255,255,0.15), transparent 60%);
+  mix-blend-mode:screen;
+  transform:translate(0,0);
+  transition: transform 0.1s;
+}
+.bubble.glow{
+  box-shadow: 0 0 15px rgba(0,255,255,0.5),
+              0 0 30px rgba(0,255,255,0.3),
+              0 0 45px rgba(0,255,255,0.2);
+  transform: scale(1.03);
+}
+
 .typing{font-style:italic;opacity:0.7;}
 @keyframes slideUp{to{opacity:1;transform:translateY(0);}}
 
+/* Avatar */
 .avatar{
   width:40px;
   height:40px;
@@ -117,8 +146,6 @@ header span{font-size:0.9em;opacity:0.7;}
 }
 .message.ai .avatar{background:#00c896 url('https://i.ibb.co/7pF0g1R/robot.png') center/cover no-repeat;}
 .message.user .avatar{background:#007c5c url('https://i.ibb.co/Y0w6nLc/user.png') center/cover no-repeat;}
-
-/* Hover Avatar động */
 .message.ai .avatar:hover,
 .message.user .avatar:hover{
   transform: scale(1.15) rotate(-5deg);
@@ -200,13 +227,24 @@ const imgBtn=document.getElementById("imgBtn");
 const fileInput=document.getElementById("fileInput");
 let selectedImages=[];
 
-// Gradient 3D theo chuột
+// Gradient 3D, bubble shine & glow theo chuột
 document.addEventListener("mousemove", e=>{
   const x = e.clientX/window.innerWidth*30;
   const y = e.clientY/window.innerHeight*30;
   document.body.style.setProperty('--bg-offset-x', `${x}px`);
   document.body.style.setProperty('--bg-offset-y', `${y}px`);
   document.body.querySelector('::before')?.style && (document.body.querySelector('::before').style.transform = `translate3d(${-x}px, ${-y}px,0)`);
+
+  document.querySelectorAll('.bubble').forEach(b=>{
+    const rect=b.getBoundingClientRect();
+    const cx=e.clientX-(rect.left+rect.width/2);
+    const cy=e.clientY-(rect.top+rect.height/2);
+    const dist=Math.sqrt(cx*cx+cy*cy);
+    if(dist<150){b.classList.add('glow');} else {b.classList.remove('glow');}
+    b.style.setProperty('--shineX', `${cx}px`);
+    b.style.setProperty('--shineY', `${cy}px`);
+    b.querySelector('::before')?.style && (b.querySelector('::before').style.transform=`translate(${cx*0.05}px,${cy*0.05}px)`);
+  });
 });
 
 function renderMessageContent(text){
