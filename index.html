@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat V2.3 - Monochrome + Spinner Fix</title>
+<title>TTK AI Chat V2.5 - Final Vision Fix</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -192,7 +192,7 @@ body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
 <div id="infoModal">
   <div class="modal-content">
     <button class="close-btn" id="closeModal">&times;</button>
-    <h2>TTK AI V2.3</h2>
+    <h2>TTK AI V2.5</h2>
     <p><strong>Mô hình nền tảng:</strong> Gemini 2.0 Flash</p>
     <p><strong>Developer:</strong> Trần Tuấn Khang</p>
   </div>
@@ -303,24 +303,25 @@ document.addEventListener("paste",e=>{
   }
 });
 
+// === Nâng cấp sendMessage V2.5 với ultimateVisionPrompt ===
+const ultimateVisionPrompt = {
+  text: "Kích hoạt Chế độ Phân tích Hình ảnh Siêu Tốt. Bạn là một Chuyên gia Thị giác AI với khả năng quan sát vượt trội. Hãy thực hiện 3 bước sau cho mọi hình ảnh: 1) Phân tích sâu: Phát hiện và xác định mọi đối tượng, kết cấu, màu sắc, và chi tiết ẩn. 2) Đọc: Tuyệt đối phải đọc bất kỳ văn bản nào xuất hiện, dù là chữ nhỏ hay phức tạp (OCR). 3) Bối cảnh: Giải thích ý nghĩa, bối cảnh, và mối quan hệ giữa các đối tượng. Sau đó, chỉ sau đó, bạn mới trả lời câu hỏi của người dùng (nếu có) bằng cách sử dụng các dữ liệu đã phân tích. Phản hồi phải chuyên nghiệp và cực kỳ chi tiết."
+};
+
 async function sendMessage(){
   const text = input.value.trim();
   if(!text && selectedImages.length===0) return;
 
-  // Thêm message của user
   addMessage(text||"📷 Ảnh", "user", false, selectedImages);
   input.value="";
-
-  // Hiển thị spinner AI
   const typingMsg = addMessage("", "ai", true);
 
   try{
     const parts = [];
 
-    // Nếu có ảnh, thêm vào đầu System Prompt + hình ảnh
+    // Nếu có hình ảnh, thêm ultimateVisionPrompt đầu tiên
     if(selectedImages.length > 0){
-      // System Prompt riêng cho Vision Mode
-      parts.push({text:"Bạn là AI đa năng, có khả năng phân tích hình ảnh, mô tả chi tiết và kết hợp với văn bản người dùng."});
+      parts.push(ultimateVisionPrompt);
     }
 
     // Thêm tất cả ảnh
@@ -328,10 +329,9 @@ async function sendMessage(){
       parts.push({inline_data:{mime_type:"image/png",data:img.split(",")[1]}});
     });
 
-    // Thêm text người dùng
+    // Thêm text người dùng cuối cùng
     if(text) parts.push({text});
 
-    // Gọi API
     const res = await fetch(endpoint,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -366,4 +366,3 @@ window.onclick=e=>{if(e.target===infoModal) infoModal.classList.remove("show");}
 </script>
 </body>
 </html>
-
