@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat V2.0 - Glassmorphism Pro</title>
+<title>TTK AI Chat V2.0 - Monochrome</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -35,11 +35,10 @@ body{
 body::before{
   content:"";
   position:absolute;
-  width:300%;
-  height:300%;
-  background: radial-gradient(circle at 30% 30%, #a855f744, transparent),
-              radial-gradient(circle at 70% 70%, #b366ff33, transparent);
-  filter: blur(200px) contrast(1.1);
+  width:100%;
+  height:100%;
+  background: rgba(15,15,15,0.4);
+  filter: blur(50px);
   transform: translate3d(0,0,0);
   z-index:0;
 }
@@ -48,10 +47,10 @@ header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background: rgba(20,20,20,0.6);
-  backdrop-filter: blur(16px) saturate(180%);
-  border-radius:20px;
-  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  background: rgba(20,20,20,0.5);
+  backdrop-filter: blur(12px);
+  border-radius:12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
   position:relative;
   z-index:1;
   transition: all 0.4s ease;
@@ -59,7 +58,7 @@ header{
 header span{
   font-size:0.9em;
   opacity:0.7;
-  color:#ccc;
+  color: var(--text-dark);
 }
 .mode-toggle,.info-btn{
   background:none;
@@ -71,7 +70,7 @@ header span{
   margin-left:10px;
 }
 .mode-toggle:hover,.info-btn:hover{
-  transform:scale(1.1);
+  transform:scale(1.05);
 }
 #messages{
   flex:1;
@@ -84,7 +83,7 @@ header span{
   position:relative;
   scroll-behavior:smooth;
 }
-#messages::-webkit-scrollbar{width:10px;}
+#messages::-webkit-scrollbar{width:8px;}
 #messages::-webkit-scrollbar-track{background:transparent;}
 #messages::-webkit-scrollbar-thumb{
   background: var(--accent);
@@ -108,37 +107,34 @@ header span{
   display:flex;
   flex-direction:column;
   gap:8px;
-  backdrop-filter:blur(16px) saturate(180%);
+  backdrop-filter:blur(12px);
   background: var(--bubble-ai-dark);
-  border-radius:16px;
+  border-radius:12px;
   position:relative;
-  transition:0.3s, box-shadow 0.3s;
+  transition:0.3s;
   overflow:hidden;
 }
 .user .bubble{
   background:var(--bubble-user-dark);
-  color:#fff;
+  color: var(--text-dark);
 }
 .ai .bubble{
   padding:20px 25px;
   border-radius:16px 16px 16px 4px;
-  background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(50,50,50,0.85));
-  box-shadow:0 0 10px var(--accent),0 0 25px rgba(255,255,255,0.05),inset 0 0 5px rgba(255,255,255,0.05);
-  border-left: 4px solid var(--accent);
+  background: var(--bubble-ai-dark);
+  border-left: 3px solid var(--accent);
 }
 .ai .bubble pre{
-  background: rgba(20,20,20,0.7);
-  border-left: 4px solid var(--accent);
-  border-radius:8px;
-  padding:12px 16px;
+  background: rgba(25,25,25,0.7);
+  border-left: 2px solid #555;
+  border-radius:6px;
+  padding:10px 14px;
   overflow-x:auto;
   font-family:'Share Tech Mono','Orbitron',monospace;
-  color:#fff;
-  margin:6px 0;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  color: var(--text-dark);
 }
 .ai .bubble code{
-  background: rgba(0,0,0,0.2);
+  background: rgba(50,50,50,0.3);
   border-radius:4px;
   padding:2px 6px;
   font-family:'Share Tech Mono','Orbitron',monospace;
@@ -150,13 +146,13 @@ header span{
   top:0; left:0;
   width:100%; height:100%;
   pointer-events:none;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02), transparent 70%);
   mix-blend-mode:screen;
   transition: transform 0.2s ease;
 }
 .bubble.glow{
-  box-shadow: 0 0 15px var(--accent),0 0 30px rgba(255,255,255,0.05);
-  transform: scale(1.03);
+  box-shadow: 0 0 6px var(--accent, rgba(168,85,247,0.5));
+  transform: scale(1.01);
 }
 .avatar{
   width:42px;
@@ -164,22 +160,21 @@ header span{
   border-radius:50%;
   margin-right:10px;
   flex-shrink:0;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s;
 }
 .message.ai .avatar{background:#a855f7 url('https://i.ibb.co/dsCLWn26/images.jpg') center/cover no-repeat;}
 .message.user .avatar{background:#555 url('https://i.ibb.co/PsYbWjjR/png-clipart-aspria-fitness-computer-icons-user-my-account-icon-miscellaneous-monochrome-thumbnail.png') center/cover no-repeat;}
 .message.ai .avatar:hover,
 .message.user .avatar:hover{
-  transform: scale(1.2);
-  box-shadow: 0 4px 25px var(--accent);
+  transform: scale(1.1);
 }
 .chat-input{
   display:flex;
   padding:14px;
   gap:10px;
   background: rgba(20,20,20,0.5);
-  backdrop-filter: blur(16px) saturate(180%);
-  border-radius:20px;
+  backdrop-filter: blur(12px);
+  border-radius:16px;
   position:relative;
   z-index:1;
 }
@@ -188,16 +183,16 @@ header span{
   padding:14px;
   border-radius:12px;
   border:none;
-  background: rgba(255,255,255,0.1);
-  color: #e0e0e0;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-dark);
   font-family:'Inter',sans-serif;
   font-size:1em;
   outline:none;
-  transition:0.3s, box-shadow 0.3s;
+  transition:0.3s;
 }
 .chat-input input[type="text"]:focus{
-  box-shadow: 0 0 12px var(--accent);
-  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 6px var(--accent);
+  background: rgba(255,255,255,0.12);
 }
 .send-btn{
   padding:12px 22px;
@@ -208,25 +203,26 @@ header span{
   font-weight:bold;
   cursor:pointer;
   font-family:'Orbitron','Share Tech Mono',monospace;
-  transition:0.3s, box-shadow 0.3s;
+  transition:0.3s;
 }
 .send-btn:hover{
-  box-shadow:0 0 15px var(--accent);
+  box-shadow:0 0 6px var(--accent);
 }
 .icon-btn{
   background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;transition:0.3s;
 }
 .icon-btn:hover{
-  text-shadow:0 0 12px var(--accent);
+  text-shadow:0 0 6px var(--accent);
 }
 .file-input{display:none;}
 .image-preview{
   width:70px;height:70px;border-radius:16px;object-fit:cover;border:2px solid var(--accent);cursor:pointer;position:relative;
-  transition:0.3s, box-shadow 0.3s;
+  transition:0.3s;
 }
 .image-preview:hover{
-  box-shadow:0 0 15px var(--accent);
+  box-shadow:0 0 6px var(--accent);
 }
+
 /* Light mode */
 body.light{
   background:var(--bg-light);
@@ -255,19 +251,19 @@ body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
 }
 #infoModal .modal-content{
   background: var(--modal-bg);
-  backdrop-filter: blur(16px) saturate(180%);
-  padding:25px 35px;
-  border-radius:20px;
+  backdrop-filter: blur(12px);
+  padding:20px 30px;
+  border-radius:16px;
   max-width:400px;
   text-align:center;
-  color:#fff;
+  color: var(--text-dark);
   position:relative;
 }
 #infoModal .modal-content h2{margin-bottom:10px;font-family:'Orbitron',monospace;}
 #infoModal .modal-content p{margin:6px 0;}
 #infoModal .close-btn{
   position:absolute;top:10px;right:15px;
-  background:none;border:none;color:#fff;font-size:1.5em;cursor:pointer;
+  background:none;border:none;color:var(--text-dark);font-size:1.5em;cursor:pointer;
 }
 </style>
 </head>
