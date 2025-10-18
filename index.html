@@ -3,21 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat V2.5 - Final Vision Fix</title>
+<title>TTK AI Chat V2.5 - DeepSeek Edition</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
+/* === TOÀN BỘ GIAO DIỆN GIỮ NGUYÊN === */
 :root{
-  --bg-dark:#0a0a0f;
-  --bg-light:#f9f9f9;
-  --text-dark:#e0e0e0;
-  --text-light:#111;
-  --accent:#a855f7;
-  --accent-hover:#b366ff;
-  --bubble-ai-dark:rgba(30,30,30,0.75);
-  --bubble-user-dark:rgba(50,50,50,0.55);
-  --bubble-ai-light:rgba(245,245,245,0.85);
-  --bubble-user-light:rgba(220,220,220,0.8);
+  --bg-dark:#0a0a0f;--bg-light:#f9f9f9;--text-dark:#e0e0e0;--text-light:#111;
+  --accent:#a855f7;--accent-hover:#b366ff;
+  --bubble-ai-dark:rgba(30,30,30,0.75);--bubble-user-dark:rgba(50,50,50,0.55);
+  --bubble-ai-light:rgba(245,245,245,0.85);--bubble-user-light:rgba(220,220,220,0.8);
   --modal-bg: rgba(20,20,20,0.7);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -25,175 +20,108 @@ body{
   font-family:'Inter',sans-serif;
   background: var(--bg-dark);
   color: var(--text-dark);
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  position:relative;
+  height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative;
   transition:0.5s background ease,color 0.5s;
 }
 body::before{
-  content:"";
-  position:absolute;
-  width:100%;
-  height:100%;
-  background: rgba(15,15,15,0.4);
-  filter: blur(50px);
-  transform: translate3d(0,0,0);
+  content:"";position:absolute;width:100%;height:100%;
+  background: radial-gradient(circle at center,rgba(100,0,255,0.2),rgba(0,0,0,0.8));
+  background-size:200% 200%;animation: moveGradient 12s ease infinite;
   z-index:0;
 }
-
-/* === Splash Screen === */
-#splashScreen{
-  position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background: var(--bg-dark);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-  opacity:1;
-  transition: opacity 0.8s ease;
+@keyframes moveGradient{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
+
+/* Splash */
+#splashScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-dark);
+display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;opacity:1;transition:opacity 0.8s ease;}
 #splashScreen.hidden{opacity:0;pointer-events:none;}
-#splashScreen .ai-spinner{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-#splashScreen .ai-spinner .spinner{
-  width:30px;
-  height:30px;
-  border:4px solid rgba(255,255,255,0.2);
-  border-top:4px solid var(--accent);
-  border-radius:50%;
-  animation: spin 1s linear infinite;
-}
-#splashScreen span{
-  font-size:1.1em;
-  color: var(--text-dark);
-  font-weight:500;
-  margin-top:10px;
-}
+#splashScreen .ai-spinner{display:flex;align-items:center;gap:10px;}
+#splashScreen .ai-spinner .spinner{width:30px;height:30px;border:4px solid rgba(255,255,255,0.2);
+border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
+#splashScreen span{font-size:1.1em;color:var(--text-dark);margin-top:10px;}
+@keyframes spin{0%{transform:rotate(0);}100%{transform:rotate(360deg);}}
 
-/* Spinner keyframes */
-@keyframes spin{
-  0%{transform:rotate(0deg);}
-  100%{transform:rotate(360deg);}
-}
+/* Header */
+header{padding:15px 25px;display:flex;justify-content:space-between;align-items:center;
+background:rgba(20,20,20,0.5);backdrop-filter:blur(12px);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.2);
+z-index:1;transition:all .4s;}
+header span{font-size:.9em;opacity:.7;color:var(--text-dark);}
+.mode-toggle,.info-btn{background:none;border:none;color:inherit;font-size:1.5em;cursor:pointer;transition:.3s;margin-left:10px;}
+.mode-toggle:hover,.info-btn:hover{transform:scale(1.1);}
 
-/* === Spinner Bubble AI === */
-.message.ai .ai-spinner{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.message.ai .ai-spinner .spinner{
-  width:20px;
-  height:20px;
-  border:2px solid rgba(255,255,255,0.2);
-  border-top:2px solid var(--accent);
-  border-radius:50%;
-  animation: spin 1s linear infinite;
-}
-.message.ai .ai-spinner span{
-  font-size:0.85em;
-  color: var(--text-dark);
-}
-
-/* === GIỮ NGUYÊN CSS CŨ === */
-header{
-  padding:15px 25px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background: rgba(20,20,20,0.5);
-  backdrop-filter: blur(12px);
-  border-radius:12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-  position:relative;
-  z-index:1;
-  transition: all 0.4s ease;
-}
-header span{ font-size:0.9em; opacity:0.7; color: var(--text-dark);}
-.mode-toggle,.info-btn{ background:none; border:none; color:inherit; font-size:1.5em; cursor:pointer; transition:all 0.3s ease; margin-left:10px;}
-.mode-toggle:hover,.info-btn:hover{ transform:scale(1.05);}
-#messages{ flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px; z-index:1; position:relative; scroll-behavior:smooth;}
-#messages::-webkit-scrollbar{width:8px;}
-#messages::-webkit-scrollbar-track{background:transparent;}
-#messages::-webkit-scrollbar-thumb{ background: var(--accent); border-radius:8px;}
-.message{ display:flex; max-width:75%; opacity:0; transform:translateY(20px) scale(0.95); animation: slide-up 0.5s ease-out forwards; position:relative;}
+/* Chat Area */
+#messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;
+z-index:1;position:relative;scroll-behavior:smooth;}
+.message{display:flex;max-width:75%;opacity:0;transform:translateY(20px) scale(0.95);
+animation:slide-up .5s ease-out forwards;position:relative;}
 .message.user{align-self:flex-end;}
 .message.ai{align-self:flex-start;}
-.bubble{ padding:16px 20px; word-wrap:break-word; line-height:1.5; white-space:pre-wrap; display:flex; flex-direction:column; gap:8px; backdrop-filter:blur(12px); background: var(--bubble-ai-dark); border-radius:12px; position:relative; transition:0.3s; overflow:hidden;}
-.user .bubble{ background:var(--bubble-user-dark); color: var(--text-dark);}
-.ai .bubble{ padding:20px 25px; border-radius:16px 16px 16px 4px; background: var(--bubble-ai-dark); border-left: 3px solid var(--accent);}
-.ai .bubble pre{ background: rgba(25,25,25,0.7); border-left: 2px solid #555; border-radius:6px; padding:10px 14px; overflow-x:auto; font-family:'Share Tech Mono','Orbitron',monospace; color: var(--text-dark);}
-.ai .bubble code{ background: rgba(50,50,50,0.3); border-radius:4px; padding:2px 6px; font-family:'Share Tech Mono','Orbitron',monospace; color:var(--accent);}
-.bubble::before{ content:""; position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02), transparent 70%); mix-blend-mode:screen; transition: transform 0.2s ease;}
-.bubble.glow{ box-shadow: 0 0 6px var(--accent, rgba(168,85,247,0.5)); transform: scale(1.01);}
-.avatar{ width:42px; height:42px; border-radius:50%; margin-right:10px; flex-shrink:0; transition: transform 0.3s;}
-.message.ai .avatar{background:#a855f7 url('https://i.ibb.co/dsCLWn26/images.jpg') center/cover no-repeat;}
-.message.user .avatar{background:#555 url('https://i.ibb.co/PsYbWjjR/png-clipart-aspria-fitness-computer-icons-user-my-account-icon-miscellaneous-monochrome-thumbnail.png') center/cover no-repeat;}
-.message.ai .avatar:hover,.message.user .avatar:hover{ transform: scale(1.1);}
-.chat-input{ display:flex; padding:14px; gap:10px; background: rgba(20,20,20,0.5); backdrop-filter: blur(12px); border-radius:16px; position:relative; z-index:1;}
-.chat-input input[type="text"]{ flex:1; padding:14px; border-radius:12px; border:none; background: rgba(255,255,255,0.08); color: var(--text-dark); font-family:'Inter',sans-serif; font-size:1em; outline:none; transition:0.3s;}
-.chat-input input[type="text"]:focus{ box-shadow: 0 0 6px var(--accent); background: rgba(255,255,255,0.12);}
-.send-btn{ padding:12px 22px; border:none; border-radius:12px; background: var(--accent); color:#fff; font-weight:bold; cursor:pointer; font-family:'Orbitron','Share Tech Mono',monospace; transition:0.3s;}
-.send-btn:hover{ box-shadow:0 0 6px var(--accent);}
-.icon-btn{ background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;transition:0.3s;}
-.icon-btn:hover{ text-shadow:0 0 6px var(--accent);}
-.file-input{display:none;}
-.image-preview{ width:70px;height:70px;border-radius:16px;object-fit:cover;border:2px solid var(--accent);cursor:pointer;position:relative; transition:0.3s;}
-.image-preview:hover{ box-shadow:0 0 6px var(--accent);}
-body.light{ background:var(--bg-light); color:var(--text-light);}
-body.light .ai .bubble{background:var(--bubble-ai-light);color:var(--text-light);}
-body.light .user .bubble{background:var(--bubble-user-light);}
-body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
 @keyframes slide-up{0%{opacity:0;transform:translateY(20px) scale(0.95);}100%{opacity:1;transform:translateY(0) scale(1);}}
 
-/* Info Modal */
-#infoModal{ position:fixed;top:0;left:0;width:100%;height:100%; background: rgba(0,0,0,0.5); display:flex;justify-content:center;align-items:center; opacity:0;pointer-events:none;transition:0.3s; z-index:10;}
-#infoModal.show{ opacity:1;pointer-events:auto;}
-#infoModal .modal-content{ background: var(--modal-bg); backdrop-filter: blur(12px); padding:20px 30px; border-radius:16px; max-width:400px; text-align:center; color: var(--text-dark); position:relative;}
-#infoModal .modal-content h2{margin-bottom:10px;font-family:'Orbitron',monospace;}
-#infoModal .modal-content p{margin:6px 0;}
-#infoModal .close-btn{ position:absolute;top:10px;right:15px; background:none;border:none;color:var(--text-dark);font-size:1.5em;cursor:pointer;}
+/* Bubble */
+.bubble{padding:16px 20px;line-height:1.5;backdrop-filter:blur(12px);
+border-radius:16px;background:var(--bubble-ai-dark);transition:.3s;position:relative;}
+.user .bubble{background:var(--bubble-user-dark);}
+.ai .bubble{border-left:3px solid var(--accent);}
+.bubble.glow{box-shadow:0 0 8px var(--accent);transform:scale(1.02);}
+.bubble::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--shineX,50%) var(--shineY,50%),rgba(255,255,255,0.06),transparent 70%);mix-blend-mode:screen;}
+
+/* Avatar */
+.avatar{width:42px;height:42px;border-radius:50%;margin-right:10px;flex-shrink:0;transition:.3s;}
+.message.ai .avatar{background:#a855f7 url('https://i.ibb.co/dsCLWn26/images.jpg') center/cover;}
+.message.user .avatar{background:#555 url('https://i.ibb.co/PsYbWjjR/png-clipart-aspria-fitness-computer-icons-user-my-account-icon-miscellaneous-monochrome-thumbnail.png') center/cover;}
+.avatar:hover{transform:scale(1.1);}
+
+/* Input */
+.chat-input{display:flex;padding:14px;gap:10px;background:rgba(20,20,20,0.5);backdrop-filter:blur(12px);
+border-radius:16px;z-index:1;}
+.chat-input input[type="text"]{flex:1;padding:14px;border-radius:12px;border:none;background:rgba(255,255,255,0.08);
+color:var(--text-dark);font-size:1em;outline:none;transition:.3s;}
+.chat-input input[type="text"]:focus{box-shadow:0 0 6px var(--accent);}
+.send-btn{padding:12px 22px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:bold;
+cursor:pointer;transition:.3s;}
+.send-btn:hover{box-shadow:0 0 6px var(--accent);}
+.icon-btn{background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;transition:.3s;}
+.icon-btn:hover{text-shadow:0 0 6px var(--accent);}
+.image-preview{width:70px;height:70px;border-radius:16px;object-fit:cover;border:2px solid var(--accent);
+cursor:pointer;transition:.3s;margin-top:8px;}
+.image-preview:hover{box-shadow:0 0 8px var(--accent);}
+
+/* Modal */
+#infoModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);
+display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:.3s;z-index:10;}
+#infoModal.show{opacity:1;pointer-events:auto;}
+#infoModal .modal-content{background:var(--modal-bg);backdrop-filter:blur(12px);padding:20px 30px;border-radius:16px;
+max-width:400px;text-align:center;color:var(--text-dark);position:relative;}
+#infoModal .close-btn{position:absolute;top:10px;right:15px;background:none;border:none;color:var(--text-dark);font-size:1.5em;cursor:pointer;}
 </style>
 </head>
 <body>
-
-<!-- === Splash Screen === -->
-<div id="splashScreen">
-  <div class="ai-spinner">
-    <div class="spinner"></div>
-    <span>Đang load hệ thống Base64...</span>
-  </div>
-</div>
+<div id="splashScreen"><div class="ai-spinner"><div class="spinner"></div><span>Đang tải TTK AI...</span></div></div>
 
 <header>
-  🤖 TTK AI <span>Dev by Trần Tuấn Khang</span>
-  <div>
-    <button class="mode-toggle" id="modeToggle">🌓</button>
-    <button class="info-btn" id="infoBtn">ℹ️</button>
-  </div>
+  🤖 TTK AI <span>DeepSeek Edition</span>
+  <div><button class="mode-toggle" id="modeToggle">🌓</button><button class="info-btn" id="infoBtn">ℹ️</button></div>
 </header>
+
 <div id="messages"></div>
+
 <div class="chat-input">
   <button class="icon-btn" id="imgBtn">🖼️</button>
-  <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
-  <input type="text" id="input" placeholder="Nhập tin nhắn hoặc mô tả ảnh...">
+  <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+  <input type="text" id="input" placeholder="Nhập tin nhắn hoặc dán ảnh (Ctrl+V)...">
   <button id="send" class="send-btn">Gửi</button>
 </div>
 
-<!-- Info Modal -->
 <div id="infoModal">
   <div class="modal-content">
     <button class="close-btn" id="closeModal">&times;</button>
     <h2>TTK AI V2.5</h2>
-    <p><strong>Mô hình nền tảng:</strong> Gemini 2.0 Flash</p>
+    <p><strong>Mô hình:</strong> DeepSeek Chat / Vision</p>
     <p><strong>Developer:</strong> Trần Tuấn Khang</p>
   </div>
 </div>
@@ -201,168 +129,85 @@ body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
-// === Splash Screen Logic ===
-window.addEventListener("load", ()=>{
+// Splash
+window.addEventListener("load",()=>{
   const splash=document.getElementById("splashScreen");
-  setTimeout(()=>{
-    splash.classList.add("hidden");
-    setTimeout(()=>{
-      splash.style.display="none";
-      addMessage("Xin chào 👋! Mình là **TTK AI** – trợ lý ảo của bạn. Hãy gửi tin nhắn hoặc ảnh để mình giúp nhé!","ai");
-    },800);
-  },2000);
+  setTimeout(()=>{splash.classList.add("hidden");setTimeout(()=>{splash.style.display="none";
+  addMessage("Xin chào 👋! Mình là **TTK AI DeepSeek**, hãy gửi tin nhắn hoặc ảnh để mình giúp bạn nhé!","ai");},800);},2000);
 });
 
-// === GIỮ NGUYÊN LOGIC JS CŨ ===
-const API_KEY="AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
-const MODEL="gemini-2.0-flash";
-const endpoint=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+const API_KEY="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"; // 🔑 thay bằng key thật
+const MODEL="deepseek/deepseek-r1-distill-llama-70b:free"; // hoặc deepseek/deepseek-vision
+const endpoint="https://openrouter.ai/api/v1";
+
 const messagesDiv=document.getElementById("messages");
 const input=document.getElementById("input");
 const sendBtn=document.getElementById("send");
-const modeToggle=document.getElementById("modeToggle");
 const imgBtn=document.getElementById("imgBtn");
 const fileInput=document.getElementById("fileInput");
+const modeToggle=document.getElementById("modeToggle");
 let selectedImages=[];
 
-document.addEventListener("mousemove", e=>{
-  const x = e.clientX/window.innerWidth*30;
-  const y = e.clientY/window.innerHeight*30;
-  document.body.style.setProperty('--bg-offset-x', `${x}px`);
-  document.body.style.setProperty('--bg-offset-y', `${y}px`);
-  document.querySelectorAll('.bubble').forEach(b=>{
-    const rect=b.getBoundingClientRect();
-    const cx=e.clientX-(rect.left+rect.width/2);
-    const cy=e.clientY-(rect.top+rect.height/2);
-    const dist=Math.sqrt(cx*cx+cy*cy);
-    if(dist<150){b.classList.add('glow');} else {b.classList.remove('glow');}
-    b.style.setProperty('--shineX', `${cx}px`);
-    b.style.setProperty('--shineY', `${cy}px`);
+function renderMessageContent(text){
+  const c=document.createElement("div");
+  c.innerHTML=marked.parse(text);
+  c.querySelectorAll("pre code").forEach(el=>hljs.highlightElement(el));
+  return c;
+}
+function addMessage(text,sender,isTyping=false,imgs=[]){
+  const msg=document.createElement("div");msg.className=`message ${sender}`;
+  const avatar=document.createElement("div");avatar.className="avatar";msg.appendChild(avatar);
+  const bubble=document.createElement("div");bubble.className="bubble";
+  imgs.forEach(src=>{const i=document.createElement("img");i.src=src;i.className="image-preview";
+  i.onclick=()=>{selectedImages=selectedImages.filter(s=>s!==src);i.remove();};bubble.appendChild(i);});
+  if(isTyping&&sender==="ai"){const spin=document.createElement("div");spin.className="ai-spinner";
+  spin.innerHTML='<div class="spinner"></div><span>TTK AI đang gõ...</span>';bubble.appendChild(spin);} 
+  else bubble.appendChild(renderMessageContent(text));
+  msg.appendChild(bubble);messagesDiv.appendChild(msg);messagesDiv.scrollTop=messagesDiv.scrollHeight;return msg;
+}
+
+// Hover glow
+document.addEventListener("mousemove",e=>{
+  document.querySelectorAll(".bubble").forEach(b=>{
+    const r=b.getBoundingClientRect(),cx=e.clientX-(r.left+r.width/2),cy=e.clientY-(r.top+r.height/2);
+    const d=Math.sqrt(cx*cx+cy*cy);
+    if(d<150)b.classList.add("glow");else b.classList.remove("glow");
+    b.style.setProperty("--shineX",`${cx}px`);b.style.setProperty("--shineY",`${cy}px`);
   });
 });
-
-function renderMessageContent(text){
-  const container=document.createElement("div");
-  container.innerHTML=marked.parse(text);
-  container.querySelectorAll('pre code').forEach(el=>hljs.highlightElement(el));
-  return container;
-}
-
-function addMessage(text,sender,isTyping=false,images=[]){
-  const msg=document.createElement("div");
-  msg.className=`message ${sender}`;
-  const avatar=document.createElement("div");
-  avatar.className="avatar";
-  msg.appendChild(avatar);
-  const bubble=document.createElement("div");
-  bubble.className="bubble";
-  images.forEach(src=>{
-    const img=document.createElement("img");
-    img.src=src; img.className="image-preview";
-    img.onclick=()=>{selectedImages=selectedImages.filter(s=>s!==src); img.remove();};
-    bubble.appendChild(img);
-  });
-
-  if(isTyping && sender==="ai"){
-    const spinnerDiv=document.createElement("div");
-    spinnerDiv.className="ai-spinner";
-    const spinnerCircle=document.createElement("div");
-    spinnerCircle.className="spinner";
-    const spanText=document.createElement("span");
-    spanText.textContent="Processing...";
-    spinnerDiv.appendChild(spinnerCircle);
-    spinnerDiv.appendChild(spanText);
-    bubble.appendChild(spinnerDiv);
-  } else {
-    bubble.appendChild(renderMessageContent(text));
-  }
-
-  msg.appendChild(bubble);
-  messagesDiv.appendChild(msg);
-  setTimeout(()=>msg.classList.add("show"),50);
-  messagesDiv.scrollTop=messagesDiv.scrollHeight;
-  return msg;
-}
 
 imgBtn.onclick=()=>fileInput.click();
-fileInput.onchange=e=>{
-  Array.from(e.target.files).forEach(file=>{
-    const reader=new FileReader();
-    reader.onload=()=>{selectedImages.push(reader.result); addMessage("", "user", false,[reader.result]);};
-    reader.readAsDataURL(file);
-  });
-};
-document.addEventListener("paste",e=>{
-  for(let i=0;i<e.clipboardData.items.length;i++){
-    if(e.clipboardData.items[i].type.indexOf("image")!==-1){
-      const file=e.clipboardData.items[i].getAsFile();
-      const reader=new FileReader();
-      reader.onload=()=>{selectedImages.push(reader.result); addMessage("", "user", false,[reader.result]);};
-      reader.readAsDataURL(file);
-    }
-  }
-});
-
-// === Nâng cấp sendMessage V2.5 với ultimateVisionPrompt ===
-const ultimateVisionPrompt = {
-  text: "Kích hoạt Chế độ Phân tích Hình ảnh Siêu Tốt. Bạn là một Chuyên gia Thị giác AI với khả năng quan sát vượt trội. Hãy thực hiện 3 bước sau cho mọi hình ảnh: 1) Phân tích sâu: Phát hiện và xác định mọi đối tượng, kết cấu, màu sắc, và chi tiết ẩn. 2) Đọc: Tuyệt đối phải đọc bất kỳ văn bản nào xuất hiện, dù là chữ nhỏ hay phức tạp (OCR). 3) Bối cảnh: Giải thích ý nghĩa, bối cảnh, và mối quan hệ giữa các đối tượng. Sau đó, chỉ sau đó, bạn mới trả lời câu hỏi của người dùng (nếu có) bằng cách sử dụng các dữ liệu đã phân tích. Phản hồi phải chuyên nghiệp và cực kỳ chi tiết."
-};
+fileInput.onchange=e=>{Array.from(e.target.files).forEach(f=>{const r=new FileReader();r.onload=()=>{selectedImages.push(r.result);addMessage("", "user", false,[r.result]);};r.readAsDataURL(f);});};
+document.addEventListener("paste",e=>{for(const item of e.clipboardData.items){if(item.type.indexOf("image")!==-1){const f=item.getAsFile();const r=new FileReader();r.onload=()=>{selectedImages.push(r.result);addMessage("", "user", false,[r.result]);};r.readAsDataURL(f);}}});
 
 async function sendMessage(){
-  const text = input.value.trim();
-  if(!text && selectedImages.length===0) return;
-
-  addMessage(text||"📷 Ảnh", "user", false, selectedImages);
+  const text=input.value.trim();
+  if(!text&&selectedImages.length===0)return;
+  addMessage(text||"📷 Ảnh","user",false,selectedImages);
   input.value="";
-  const typingMsg = addMessage("", "ai", true);
-
+  const typing=addMessage("", "ai", true);
   try{
-    const parts = [];
-
-    // Nếu có hình ảnh, thêm ultimateVisionPrompt đầu tiên
-    if(selectedImages.length > 0){
-      parts.push(ultimateVisionPrompt);
-    }
-
-    // Thêm tất cả ảnh
-    selectedImages.forEach(img=>{
-      parts.push({inline_data:{mime_type:"image/png",data:img.split(",")[1]}});
-    });
-
-    // Thêm text người dùng cuối cùng
-    if(text) parts.push({text});
-
-    const res = await fetch(endpoint,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{parts}]})
-    });
-
-    const data = await res.json();
-    typingMsg.remove();
-
-    const reply = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join("\n") || "⚠️ Không có phản hồi từ AI.";
-    addMessage(reply, "ai");
-
-  }catch(err){
-    typingMsg.remove();
-    addMessage("❌ Lỗi kết nối hoặc key không hợp lệ.", "ai");
+    const msgs=[{role:"system",content:"Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh."}];
+    if(selectedImages.length>0){selectedImages.forEach(img=>msgs.push({role:"user",content:[{type:"image_url",image_url:img}]}));}
+    if(text)msgs.push({role:"user",content:text});
+    const res=await fetch(endpoint,{method:"POST",headers:{"Authorization":`Bearer ${API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:msgs})});
+    const data=await res.json();
+    typing.remove();
+    const reply=data?.choices?.[0]?.message?.content||"⚠️ Không có phản hồi từ AI.";
+    addMessage(reply,"ai");
+  }catch(e){
+    typing.remove();addMessage("❌ Lỗi kết nối hoặc API Key không hợp lệ.","ai");
   }
-
-  selectedImages = [];
+  selectedImages=[];
 }
-
 sendBtn.onclick=sendMessage;
-input.addEventListener("keypress",e=>{if(e.key==="Enter") sendMessage();});
+input.addEventListener("keypress",e=>{if(e.key==="Enter")sendMessage();});
 modeToggle.onclick=()=>document.body.classList.toggle("light");
 
-// Info Modal Logic
-const infoBtn=document.getElementById("infoBtn");
-const infoModal=document.getElementById("infoModal");
-const closeModal=document.getElementById("closeModal");
-infoBtn.onclick=()=>infoModal.classList.add("show");
-closeModal.onclick=()=>infoModal.classList.remove("show");
-window.onclick=e=>{if(e.target===infoModal) infoModal.classList.remove("show");};
+// Modal
+const infoBtn=document.getElementById("infoBtn"),infoModal=document.getElementById("infoModal"),closeModal=document.getElementById("closeModal");
+infoBtn.onclick=()=>infoModal.classList.add("show");closeModal.onclick=()=>infoModal.classList.remove("show");
+window.onclick=e=>{if(e.target===infoModal)infoModal.classList.remove("show");};
 </script>
 </body>
 </html>
