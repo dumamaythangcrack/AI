@@ -1,135 +1,61 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat V2.5 - DeepSeek Edition</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>TTK AI DeepSeek Chat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <style>
-/* === TOÀN BỘ GIAO DIỆN GIỮ NGUYÊN === */
-:root{
-  --bg-dark:#0a0a0f;--bg-light:#f9f9f9;--text-dark:#e0e0e0;--text-light:#111;
-  --accent:#a855f7;--accent-hover:#b366ff;
-  --bubble-ai-dark:rgba(30,30,30,0.75);--bubble-user-dark:rgba(50,50,50,0.55);
-  --bubble-ai-light:rgba(245,245,245,0.85);--bubble-user-light:rgba(220,220,220,0.8);
-  --modal-bg: rgba(20,20,20,0.7);
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:'Inter',sans-serif;
-  background: var(--bg-dark);
-  color: var(--text-dark);
-  height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative;
-  transition:0.5s background ease,color 0.5s;
-}
-body::before{
-  content:"";position:absolute;width:100%;height:100%;
-  background: radial-gradient(circle at center,rgba(100,0,255,0.2),rgba(0,0,0,0.8));
-  background-size:200% 200%;animation: moveGradient 12s ease infinite;
-  z-index:0;
-}
-@keyframes moveGradient{
-  0%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-
-/* Splash */
-#splashScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-dark);
-display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;opacity:1;transition:opacity 0.8s ease;}
-#splashScreen.hidden{opacity:0;pointer-events:none;}
-#splashScreen .ai-spinner{display:flex;align-items:center;gap:10px;}
-#splashScreen .ai-spinner .spinner{width:30px;height:30px;border:4px solid rgba(255,255,255,0.2);
-border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
-#splashScreen span{font-size:1.1em;color:var(--text-dark);margin-top:10px;}
-@keyframes spin{0%{transform:rotate(0);}100%{transform:rotate(360deg);}}
-
-/* Header */
-header{padding:15px 25px;display:flex;justify-content:space-between;align-items:center;
-background:rgba(20,20,20,0.5);backdrop-filter:blur(12px);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.2);
-z-index:1;transition:all .4s;}
-header span{font-size:.9em;opacity:.7;color:var(--text-dark);}
-.mode-toggle,.info-btn{background:none;border:none;color:inherit;font-size:1.5em;cursor:pointer;transition:.3s;margin-left:10px;}
-.mode-toggle:hover,.info-btn:hover{transform:scale(1.1);}
-
-/* Chat Area */
-#messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;
-z-index:1;position:relative;scroll-behavior:smooth;}
-.message{display:flex;max-width:75%;opacity:0;transform:translateY(20px) scale(0.95);
-animation:slide-up .5s ease-out forwards;position:relative;}
-.message.user{align-self:flex-end;}
-.message.ai{align-self:flex-start;}
-@keyframes slide-up{0%{opacity:0;transform:translateY(20px) scale(0.95);}100%{opacity:1;transform:translateY(0) scale(1);}}
-
-/* Bubble */
-.bubble{padding:16px 20px;line-height:1.5;backdrop-filter:blur(12px);
-border-radius:16px;background:var(--bubble-ai-dark);transition:.3s;position:relative;}
-.user .bubble{background:var(--bubble-user-dark);}
-.ai .bubble{border-left:3px solid var(--accent);}
-.bubble.glow{box-shadow:0 0 8px var(--accent);transform:scale(1.02);}
-.bubble::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--shineX,50%) var(--shineY,50%),rgba(255,255,255,0.06),transparent 70%);mix-blend-mode:screen;}
-
-/* Avatar */
-.avatar{width:42px;height:42px;border-radius:50%;margin-right:10px;flex-shrink:0;transition:.3s;}
-.message.ai .avatar{background:#a855f7 url('https://i.ibb.co/dsCLWn26/images.jpg') center/cover;}
-.message.user .avatar{background:#555 url('https://i.ibb.co/PsYbWjjR/png-clipart-aspria-fitness-computer-icons-user-my-account-icon-miscellaneous-monochrome-thumbnail.png') center/cover;}
-.avatar:hover{transform:scale(1.1);}
-
-/* Input */
-.chat-input{display:flex;padding:14px;gap:10px;background:rgba(20,20,20,0.5);backdrop-filter:blur(12px);
-border-radius:16px;z-index:1;}
-.chat-input input[type="text"]{flex:1;padding:14px;border-radius:12px;border:none;background:rgba(255,255,255,0.08);
-color:var(--text-dark);font-size:1em;outline:none;transition:.3s;}
-.chat-input input[type="text"]:focus{box-shadow:0 0 6px var(--accent);}
-.send-btn{padding:12px 22px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:bold;
-cursor:pointer;transition:.3s;}
-.send-btn:hover{box-shadow:0 0 6px var(--accent);}
-.icon-btn{background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;transition:.3s;}
-.icon-btn:hover{text-shadow:0 0 6px var(--accent);}
-.image-preview{width:70px;height:70px;border-radius:16px;object-fit:cover;border:2px solid var(--accent);
-cursor:pointer;transition:.3s;margin-top:8px;}
-.image-preview:hover{box-shadow:0 0 8px var(--accent);}
-
-/* Modal */
-#infoModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);
-display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:.3s;z-index:10;}
-#infoModal.show{opacity:1;pointer-events:auto;}
-#infoModal .modal-content{background:var(--modal-bg);backdrop-filter:blur(12px);padding:20px 30px;border-radius:16px;
-max-width:400px;text-align:center;color:var(--text-dark);position:relative;}
-#infoModal .close-btn{position:absolute;top:10px;right:15px;background:none;border:none;color:var(--text-dark);font-size:1.5em;cursor:pointer;}
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
+#splashScreen { position:fixed; top:0; left:0; width:100%; height:100%; background:#007bff; color:white; display:flex; align-items:center; justify-content:center; font-size:2em; transition: opacity 0.5s; z-index:9999; }
+#splashScreen.hidden { opacity:0; }
+.container { max-width:600px; margin:20px auto; }
+#messages { height:400px; overflow-y:auto; margin-bottom:10px; }
+.message { display:flex; margin-bottom:10px; }
+.message.user { justify-content:flex-end; }
+.message.ai { justify-content:flex-start; }
+.avatar { width:40px; height:40px; background:#ccc; border-radius:50%; margin:0 5px; flex-shrink:0; }
+.bubble { max-width:70%; padding:10px; border-radius:10px; background:white; position:relative; transition: box-shadow 0.2s; }
+.message.user .bubble { background:#dcf8c6; }
+.bubble.glow { box-shadow: 0 0 20px rgba(0,123,255,0.5); }
+.ai-spinner { display:flex; align-items:center; gap:5px; }
+.ai-spinner .spinner { width:16px; height:16px; border:2px solid #ccc; border-top:2px solid #007bff; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+.image-preview { max-width:100px; max-height:100px; margin:5px; cursor:pointer; border:1px solid #ccc; border-radius:5px; }
+#infoModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+#infoModal.show { display:flex; }
+.modal-content { background:white; padding:20px; border-radius:10px; max-width:400px; width:80%; }
 </style>
 </head>
 <body>
-<div id="splashScreen"><div class="ai-spinner"><div class="spinner"></div><span>Đang tải TTK AI...</span></div></div>
 
-<header>
-  🤖 TTK AI <span>DeepSeek Edition</span>
-  <div><button class="mode-toggle" id="modeToggle">🌓</button><button class="info-btn" id="infoBtn">ℹ️</button></div>
-</header>
+<div id="splashScreen">TTK AI DeepSeek</div>
 
-<div id="messages"></div>
-
-<div class="chat-input">
-  <button class="icon-btn" id="imgBtn">🖼️</button>
-  <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-  <input type="text" id="input" placeholder="Nhập tin nhắn hoặc dán ảnh (Ctrl+V)...">
-  <button id="send" class="send-btn">Gửi</button>
+<div class="container">
+  <div id="messages"></div>
+  <div class="form-group">
+    <input type="text" id="input" class="form-control" placeholder="Nhập tin nhắn...">
+  </div>
+  <button id="send" class="btn btn-success">Gửi</button>
+  <button id="imgBtn" class="btn btn-info">Chọn ảnh</button>
+  <input type="file" id="fileInput" style="display:none" multiple accept="image/*">
+  <button id="modeToggle" class="btn btn-secondary">Toggle Light</button>
+  <button id="infoBtn" class="btn btn-warning">Info</button>
 </div>
 
 <div id="infoModal">
   <div class="modal-content">
-    <button class="close-btn" id="closeModal">&times;</button>
-    <h2>TTK AI V2.5</h2>
-    <p><strong>Mô hình:</strong> DeepSeek Chat / Vision</p>
-    <p><strong>Developer:</strong> Trần Tuấn Khang</p>
+    <h4>Thông tin</h4>
+    <p>TTK AI DeepSeek Chatbot phiên bản demo.</p>
+    <button id="closeModal" class="btn btn-danger">Đóng</button>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
-// Splash
+// --- Splash ---
 window.addEventListener("load", () => {
   const splash = document.getElementById("splashScreen");
   setTimeout(() => {
@@ -141,12 +67,12 @@ window.addEventListener("load", () => {
   }, 2000);
 });
 
-// 🔑 Cấu hình API DeepSeek
-const API_KEY = "sk-b724c5a5ce784f79bf2438f4eb16d7e8"; // Thay bằng key DeepSeek thật
-const MODEL = "deepseek-chat"; // Model DeepSeek
+// --- API DeepSeek ---
+const API_KEY = "sk-b724c5a5ce784f79bf2438f4eb16d7e8"; // Thay bằng key thật
+const MODEL = "deepseek-chat";
 const ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
-// --- Biến & phần tử giao diện ---
+// --- Giao diện ---
 const messagesDiv = document.getElementById("messages");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
@@ -163,7 +89,7 @@ function renderMessageContent(text) {
   return c;
 }
 
-// Thêm tin nhắn vào giao diện
+// Thêm tin nhắn
 function addMessage(text, sender, isTyping = false, imgs = []) {
   const msg = document.createElement("div");
   msg.className = `message ${sender}`;
@@ -200,20 +126,20 @@ function addMessage(text, sender, isTyping = false, imgs = []) {
   return msg;
 }
 
-// Hiệu ứng sáng khi di chuột
+// Hover glow
 document.addEventListener("mousemove", e => {
   document.querySelectorAll(".bubble").forEach(b => {
     const r = b.getBoundingClientRect(),
-      cx = e.clientX - (r.left + r.width/2),
-      cy = e.clientY - (r.top + r.height/2);
-    const d = Math.sqrt(cx*cx + cy*cy);
-    if (d < 150) b.classList.add("glow"); else b.classList.remove("glow");
+          cx = e.clientX - (r.left + r.width/2),
+          cy = e.clientY - (r.top + r.height/2),
+          d = Math.sqrt(cx*cx + cy*cy);
+    if(d<150) b.classList.add("glow"); else b.classList.remove("glow");
     b.style.setProperty("--shineX", `${cx}px`);
     b.style.setProperty("--shineY", `${cy}px`);
   });
 });
 
-// Xử lý gửi ảnh
+// Chọn ảnh
 imgBtn.onclick = () => fileInput.click();
 fileInput.onchange = e => {
   Array.from(e.target.files).forEach(f => {
@@ -226,93 +152,62 @@ fileInput.onchange = e => {
   });
 };
 
-// Dán ảnh từ clipboard
+// Dán ảnh
 document.addEventListener("paste", e => {
-  for (const item of e.clipboardData.items) {
-    if (item.type.indexOf("image") !== -1) {
+  for(const item of e.clipboardData.items){
+    if(item.type.indexOf("image")!==-1){
       const f = item.getAsFile();
       const r = new FileReader();
-      r.onload = () => {
-        selectedImages.push(r.result);
-        addMessage("", "user", false, [r.result]);
-      };
+      r.onload = ()=>{ selectedImages.push(r.result); addMessage("", "user", false,[r.result]); };
       r.readAsDataURL(f);
     }
   }
 });
 
-// --- Gửi tin nhắn đến DeepSeek ---
+// --- Gửi tin nhắn ---
 async function sendMessage() {
   const text = input.value.trim();
-  if (!text && selectedImages.length === 0) return;
-
-  addMessage(text || "📷 Ảnh", "user", false, selectedImages);
-  input.value = "";
+  if(!text && selectedImages.length===0) return;
+  addMessage(text || "📷 Ảnh","user",false,selectedImages);
+  input.value="";
   const typing = addMessage("", "ai", true);
 
-  try {
-    // Chuẩn bị message list
+  try{
     const msgs = [
-      { role: "system", content: "Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh." }
+      { role:"system", content:"Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh." }
     ];
+    selectedImages.forEach(img=>msgs.push({ role:"user", content:"Phân tích hình ảnh: "+img }));
+    if(text) msgs.push({ role:"user", content:text });
 
-    if (selectedImages.length > 0) {
-      selectedImages.forEach(img => {
-        msgs.push({
-          role: "user",
-          content: [
-            { type: "text", text: "Phân tích hình ảnh sau:" },
-            { type: "image_url", image_url: img }
-          ]
-        });
-      });
-    }
-
-    if (text) msgs.push({ role: "user", content: text });
-
-    // Gửi request đến DeepSeek
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ model: MODEL, messages: msgs, stream: false })
+    const res = await fetch(ENDPOINT,{
+      method:"POST",
+      headers:{ "Authorization":`Bearer ${API_KEY}`, "Content-Type":"application/json" },
+      body: JSON.stringify({ model:MODEL, messages:msgs })
     });
 
     const data = await res.json();
     typing.remove();
-
     const reply = data?.choices?.[0]?.message?.content || "⚠️ Không có phản hồi từ AI.";
-    addMessage(reply, "ai");
-  } catch(e) {
+    addMessage(reply,"ai");
+  }catch(e){
     typing.remove();
-    addMessage("❌ Lỗi kết nối hoặc API Key không hợp lệ.", "ai");
+    addMessage("❌ Lỗi kết nối hoặc API Key không hợp lệ.","ai");
   }
 
-  selectedImages = [];
+  selectedImages=[];
 }
 
 sendBtn.onclick = sendMessage;
-input.addEventListener("keypress", e => { if(e.key === "Enter") sendMessage(); });
-modeToggle.onclick = () => document.body.classList.toggle("light");
+input.addEventListener("keypress", e => { if(e.key==="Enter") sendMessage(); });
+modeToggle.onclick = ()=>document.body.classList.toggle("light");
 
 // Modal info
-const infoBtn = document.getElementById("infoBtn"),
-      infoModal = document.getElementById("infoModal"),
-      closeModal = document.getElementById("closeModal");
-
-infoBtn.onclick = () => infoModal.classList.add("show");
-closeModal.onclick = () => infoModal.classList.remove("show");
-window.onclick = e => { if(e.target === infoModal) infoModal.classList.remove("show"); };
-
+const infoBtn=document.getElementById("infoBtn"),
+      infoModal=document.getElementById("infoModal"),
+      closeModal=document.getElementById("closeModal");
+infoBtn.onclick=()=>infoModal.classList.add("show");
+closeModal.onclick=()=>infoModal.classList.remove("show");
+window.onclick=e=>{ if(e.target===infoModal) infoModal.classList.remove("show"); };
 </script>
-
 </body>
 </html>
-
-
-
-
-
-
