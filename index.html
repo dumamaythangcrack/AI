@@ -5,22 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TTK AI Chat - Cyberpunk</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-dark:#0d1117;
+  --bg-dark:#0a0a0f;
   --bg-light:#f5f5f5;
-  --text-dark:#c9d1d9;
+  --text-dark:#e0f7ff;
   --text-light:#0d1117;
-  --accent:#00c896;
-  --bubble-ai-dark:#1e2228;
-  --bubble-user-dark:#007c5c;
+  --accent:#00ffcc;
+  --accent-hover:#00e6a4;
+  --bubble-ai-dark:#101218;
+  --bubble-user-dark:#005f5f;
   --bubble-ai-light:#e9e9eb;
   --bubble-user-light:#4bd37f;
+  --glitch-color:#ff00ff;
 }
 *{box-sizing:border-box;}
 body{
   margin:0;
-  font-family:"Poppins",sans-serif;
+  font-family:'Share Tech Mono','Orbitron',monospace,sans-serif;
   background: var(--bg-dark);
   color: var(--text-dark);
   height:100vh;
@@ -32,15 +35,15 @@ body{
   perspective:1000px;
 }
 
-/* Hình nền gradient 3D tương tác theo chuột */
+/* Hình nền gradient 3D Cyberpunk */
 body::before{
   content:"";
   position:absolute;
   width:300%;
   height:300%;
-  background: radial-gradient(circle at 30% 30%, #00ff8844, transparent),
-              radial-gradient(circle at 70% 70%, #00ffff33, transparent),
-              radial-gradient(circle at 50% 50%, #ff00aa33, transparent),
+  background: radial-gradient(circle at 30% 30%, #00ffcc44, transparent),
+              radial-gradient(circle at 70% 70%, #ff00ff33, transparent),
+              radial-gradient(circle at 50% 50%, #00ffff33, transparent),
               linear-gradient(45deg, #ff008844, #00ff8844, #0088ff33);
   filter: blur(180px);
   transform: translate3d(0,0,0);
@@ -51,15 +54,16 @@ body::before{
 /* Header */
 header{
   padding:15px 25px;
-  background: rgba(22,27,34,0.9);
+  background: rgba(15,15,25,0.9);
   display:flex;
   justify-content:space-between;
   align-items:center;
   border-bottom:1px solid #30363d;
   z-index:1;
   position:relative;
+  text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent);
 }
-header span{font-size:0.9em;opacity:0.7;}
+header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--accent);}
 .mode-toggle{
   background:none;
   border:none;
@@ -67,8 +71,12 @@ header span{font-size:0.9em;opacity:0.7;}
   font-size:1.5em;
   cursor:pointer;
   transition:0.3s;
+  text-shadow: 0 0 3px var(--accent);
 }
-.mode-toggle:hover{transform:rotate(25deg);}
+.mode-toggle:hover{
+  transform:rotate(25deg);
+  text-shadow:0 0 10px var(--accent),0 0 20px #ff00ff;
+}
 
 /* Messages */
 #messages{
@@ -85,7 +93,7 @@ header span{font-size:0.9em;opacity:0.7;}
 #messages::-webkit-scrollbar{width:8px;}
 #messages::-webkit-scrollbar-thumb{background:var(--accent);border-radius:10px;}
 
-/* Bubble + animation + Cyberpunk shine */
+/* Bubble + animation + Neon/Glass */
 .message{
   display:flex;
   max-width:75%;
@@ -99,20 +107,22 @@ header span{font-size:0.9em;opacity:0.7;}
 .message.ai{align-self:flex-start;justify-content:flex-start;}
 .bubble{
   padding:14px 18px;
-  border-radius:14px;
+  border-radius:18px;
   word-wrap:break-word;
   line-height:1.5;
   white-space:pre-wrap;
   display:flex;
   flex-direction:column;
   gap:8px;
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(15px) saturate(200%);
+  border:1px solid rgba(0,255,255,0.2);
   position:relative;
   transition:0.2s, box-shadow 0.2s, transform 0.2s;
   overflow:hidden;
+  text-shadow:0 0 2px #00ffcc;
 }
-.user .bubble{background:var(--bubble-user-dark);color:#fff;}
-.ai .bubble{background:var(--bubble-ai-dark);color:var(--text-dark);}
+.user .bubble{background:rgba(0,95,95,0.5);color:#fff;}
+.ai .bubble{background:rgba(16,18,24,0.6);color:var(--text-dark);}
 .bubble::before{
   content:"";
   position:absolute;
@@ -125,14 +135,32 @@ header span{font-size:0.9em;opacity:0.7;}
   transition: transform 0.1s;
 }
 .bubble.glow{
-  box-shadow: 0 0 15px rgba(0,255,255,0.5),
-              0 0 30px rgba(0,255,255,0.3),
-              0 0 45px rgba(0,255,255,0.2);
-  transform: scale(1.03);
+  box-shadow: 0 0 15px var(--accent),
+              0 0 30px var(--accent-hover),
+              0 0 45px var(--glitch-color),
+              0 0 60px var(--accent);
+  transform: scale(1.04);
+}
+.bubble.glitch::after{
+  content: attr(data-text);
+  position:absolute;
+  top:0; left:2px;
+  width:100%; color:var(--glitch-color);
+  text-shadow:-1px 0 var(--accent),1px 0 var(--accent-hover);
+  animation: glitch 1s infinite linear alternate-reverse;
+  opacity:0.6;
 }
 
 .typing{font-style:italic;opacity:0.7;}
 @keyframes slideUp{to{opacity:1;transform:translateY(0);}}
+@keyframes glitch{
+  0%{transform:translate(0,0);}
+  20%{transform:translate(-1px,1px);}
+  40%{transform:translate(1px,-1px);}
+  60%{transform:translate(-1px,-1px);}
+  80%{transform:translate(1px,1px);}
+  100%{transform:translate(0,0);}
+}
 
 /* Avatar */
 .avatar{
@@ -141,15 +169,15 @@ header span{font-size:0.9em;opacity:0.7;}
   border-radius:50%;
   margin-right:10px;
   flex-shrink:0;
-  box-shadow: 0 4px 15px rgba(0,255,136,0.5);
+  box-shadow: 0 4px 15px var(--accent);
   transition: transform 0.3s, box-shadow 0.3s;
 }
-.message.ai .avatar{background:#00c896 url('https://i.ibb.co/7pF0g1R/robot.png') center/cover no-repeat;}
-.message.user .avatar{background:#007c5c url('https://i.ibb.co/Y0w6nLc/user.png') center/cover no-repeat;}
+.message.ai .avatar{background:#00ffcc url('https://i.ibb.co/7pF0g1R/robot.png') center/cover no-repeat;}
+.message.user .avatar{background:#005f5f url('https://i.ibb.co/Y0w6nLc/user.png') center/cover no-repeat;}
 .message.ai .avatar:hover,
 .message.user .avatar:hover{
   transform: scale(1.15) rotate(-5deg);
-  box-shadow: 0 6px 25px rgba(0,255,136,0.7);
+  box-shadow: 0 6px 25px var(--accent-hover);
 }
 
 /* Chat input */
@@ -157,7 +185,7 @@ header span{font-size:0.9em;opacity:0.7;}
   display:flex;
   padding:14px;
   gap:10px;
-  background: rgba(22,27,34,0.95);
+  background: rgba(15,15,25,0.95);
   border-top:1px solid #30363d;
   z-index:1;
   position:relative;
@@ -165,29 +193,47 @@ header span{font-size:0.9em;opacity:0.7;}
 .chat-input input[type="text"]{
   flex:1;
   padding:14px;
-  border-radius:10px;
-  border:1px solid #30363d;
-  background: rgba(13,17,23,0.7);
-  color: var(--text-dark);
+  border-radius:12px;
+  border:1px solid rgba(0,255,255,0.3);
+  background: rgba(0,0,0,0.6);
+  color: #e0f7ff;
+  font-family:'Share Tech Mono','Orbitron',monospace;
   font-size:1em;
   outline:none;
-  transition:0.3s;
+  transition:0.3s, box-shadow 0.3s;
+}
+.chat-input input[type="text"]:focus{
+  box-shadow: 0 0 10px var(--accent);
+  border-color: var(--accent);
 }
 .send-btn{
   padding:12px 20px;
   border:none;
-  border-radius:10px;
-  background: var(--accent);
-  color:#fff;
+  border-radius:12px;
+  background: linear-gradient(135deg,var(--accent),var(--accent-hover));
+  color:#0a0a0f;
   font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
+  font-family:'Orbitron','Share Tech Mono',monospace;
+  transition:0.3s, box-shadow 0.3s;
+  text-shadow:0 0 5px #00ffcc;
 }
-.send-btn:hover{background:#00e6a4;}
-.icon-btn{background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;}
+.send-btn:hover{
+  background: linear-gradient(135deg,var(--accent-hover),#ff00ff);
+  box-shadow:0 0 15px var(--accent-hover),0 0 25px #ff00ff;
+}
+.icon-btn{
+  background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;
+  transition:0.3s,text-shadow 0.3s;
+}
+.icon-btn:hover{text-shadow:0 0 10px var(--accent),0 0 20px #ff00ff;}
 .file-input{display:none;}
 .image-preview{
-  width:70px;height:70px;border-radius:10px;object-fit:cover;border:2px solid var(--accent);cursor:pointer;position:relative;
+  width:70px;height:70px;border-radius:12px;object-fit:cover;border:2px solid var(--accent);cursor:pointer;position:relative;
+  transition:0.3s, box-shadow 0.3s;
+}
+.image-preview:hover{
+  box-shadow:0 0 10px var(--accent),0 0 20px #ff00ff;
 }
 .image-preview:hover::after{
   content:"✖";position:absolute;top:-6px;right:-6px;background:white;color:red;border-radius:50%;font-size:0.8em;padding:0 3px;
@@ -215,10 +261,10 @@ body.light .chat-input input{background:#fff;color:#000;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
+// === GIỮ NGUYÊN TOÀN BỘ LOGIC JS HIỆN TẠI ===
 const API_KEY="AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
 const MODEL="gemini-2.0-flash";
 const endpoint=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
-
 const messagesDiv=document.getElementById("messages");
 const input=document.getElementById("input");
 const sendBtn=document.getElementById("send");
@@ -226,15 +272,12 @@ const modeToggle=document.getElementById("modeToggle");
 const imgBtn=document.getElementById("imgBtn");
 const fileInput=document.getElementById("fileInput");
 let selectedImages=[];
-
-// Gradient 3D, bubble shine & glow theo chuột
 document.addEventListener("mousemove", e=>{
   const x = e.clientX/window.innerWidth*30;
   const y = e.clientY/window.innerHeight*30;
   document.body.style.setProperty('--bg-offset-x', `${x}px`);
   document.body.style.setProperty('--bg-offset-y', `${y}px`);
   document.body.querySelector('::before')?.style && (document.body.querySelector('::before').style.transform = `translate3d(${-x}px, ${-y}px,0)`);
-
   document.querySelectorAll('.bubble').forEach(b=>{
     const rect=b.getBoundingClientRect();
     const cx=e.clientX-(rect.left+rect.width/2);
@@ -246,14 +289,12 @@ document.addEventListener("mousemove", e=>{
     b.querySelector('::before')?.style && (b.querySelector('::before').style.transform=`translate(${cx*0.05}px,${cy*0.05}px)`);
   });
 });
-
 function renderMessageContent(text){
   const container=document.createElement("div");
   container.innerHTML=marked.parse(text);
   container.querySelectorAll('pre code').forEach(el=>hljs.highlightElement(el));
   return container;
 }
-
 function addMessage(text,sender,isTyping=false,images=[]){
   const msg=document.createElement("div");
   msg.className=`message ${sender}`;
@@ -262,7 +303,6 @@ function addMessage(text,sender,isTyping=false,images=[]){
   msg.appendChild(avatar);
   const bubble=document.createElement("div");
   bubble.className="bubble";
-
   images.forEach(src=>{
     const img=document.createElement("img");
     img.src=src; img.className="image-preview";
@@ -276,7 +316,6 @@ function addMessage(text,sender,isTyping=false,images=[]){
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
   return msg;
 }
-
 imgBtn.onclick=()=>fileInput.click();
 fileInput.onchange=e=>{
   Array.from(e.target.files).forEach(file=>{
@@ -295,7 +334,6 @@ document.addEventListener("paste",e=>{
     }
   }
 });
-
 async function sendMessage(){
   const text=input.value.trim();
   if(!text && selectedImages.length===0) return;
@@ -317,11 +355,9 @@ async function sendMessage(){
   }
   selectedImages=[];
 }
-
 sendBtn.onclick=sendMessage;
 input.addEventListener("keypress",e=>{if(e.key==="Enter") sendMessage();});
 modeToggle.onclick=()=>document.body.classList.toggle("light");
-
 addMessage("Xin chào 👋! Mình là **TTK AI** – trợ lý ảo của bạn. Hãy gửi tin nhắn hoặc ảnh để mình giúp nhé!","ai");
 </script>
 </body>
