@@ -130,86 +130,198 @@ max-width:400px;text-align:center;color:var(--text-dark);position:relative;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
 // Splash
-window.addEventListener("load",()=>{
-  const splash=document.getElementById("splashScreen");
-  setTimeout(()=>{splash.classList.add("hidden");setTimeout(()=>{splash.style.display="none";
-  addMessage("Xin chào 👋! Mình là **TTK AI DeepSeek**, hãy gửi tin nhắn hoặc ảnh để mình giúp bạn nhé!","ai");},800);},2000);
+window.addEventListener("load", () => {
+  const splash = document.getElementById("splashScreen");
+  setTimeout(() => {
+    splash.classList.add("hidden");
+    setTimeout(() => {
+      splash.style.display = "none";
+      addMessage("Xin chào 👋! Mình là **TTK AI DeepSeek**, hãy gửi tin nhắn hoặc ảnh để mình giúp bạn nhé!", "ai");
+    }, 800);
+  }, 2000);
 });
 
-const API_KEY="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"; // 🔑 thay bằng key thật
-const MODEL="deepseek/deepseek-r1-distill-llama-70b:free"; // hoặc deepseek/deepseek-vision
-const endpoint="https://api.deepseek.com/v1/chat/completions";
+// 🔑 Cấu hình API DeepSeek
+const API_KEY = "YOUR_DEEPSEEK_API_KEY"; // 🔥 Thay bằng key thật từ https://platform.deepseek.com
+const MODEL = "deepseek-chat"; // Model chính thức DeepSeek
+const ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
-const messagesDiv=document.getElementById("messages");
-const input=document.getElementById("input");
-const sendBtn=document.getElementById("send");
-const imgBtn=document.getElementById("imgBtn");
-const fileInput=document.getElementById("fileInput");
-const modeToggle=document.getElementById("modeToggle");
-let selectedImages=[];
+// --- Biến và phần tử giao diện ---
+const messagesDiv = document.getElementById("messages");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+const imgBtn = document.getElementById("imgBtn");
+const fileInput = document.getElementById("fileInput");
+const modeToggle = document.getElementById("modeToggle");
+let selectedImages = [];
 
-function renderMessageContent(text){
-  const c=document.createElement("div");
-  c.innerHTML=marked.parse(text);
-  c.querySelectorAll("pre code").forEach(el=>hljs.highlightElement(el));
+// Hiển thị tin nhắn Markdown
+function renderMessageContent(text) {
+  const c = document.createElement("div");
+  c.innerHTML = marked.parse(text);
+  c.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el));
   return c;
 }
-function addMessage(text,sender,isTyping=false,imgs=[]){
-  const msg=document.createElement("div");msg.className=`message ${sender}`;
-  const avatar=document.createElement("div");avatar.className="avatar";msg.appendChild(avatar);
-  const bubble=document.createElement("div");bubble.className="bubble";
-  imgs.forEach(src=>{const i=document.createElement("img");i.src=src;i.className="image-preview";
-  i.onclick=()=>{selectedImages=selectedImages.filter(s=>s!==src);i.remove();};bubble.appendChild(i);});
-  if(isTyping&&sender==="ai"){const spin=document.createElement("div");spin.className="ai-spinner";
-  spin.innerHTML='<div class="spinner"></div><span>TTK AI đang gõ...</span>';bubble.appendChild(spin);} 
-  else bubble.appendChild(renderMessageContent(text));
-  msg.appendChild(bubble);messagesDiv.appendChild(msg);messagesDiv.scrollTop=messagesDiv.scrollHeight;return msg;
+
+// Thêm tin nhắn vào giao diện
+function addMessage(text, sender, isTyping = false, imgs = []) {
+  const msg = document.createElement("div");
+  msg.className = `message ${sender}`;
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  msg.appendChild(avatar);
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+
+  imgs.forEach(src => {
+    const i = document.createElement("img");
+    i.src = src;
+    i.className = "image-preview";
+    i.onclick = () => {
+      selectedImages = selectedImages.filter(s => s !== src);
+      i.remove();
+    };
+    bubble.appendChild(i);
+  });
+
+  if (isTyping && sender === "ai") {
+    const spin = document.createElement("div");
+    spin.className = "ai-spinner";
+    spin.innerHTML = '<div class="spinner"></div><span>TTK AI đang gõ...</span>';
+    bubble.appendChild(spin);
+  } else {
+    bubble.appendChild(renderMessageContent(text));
+  }
+
+  msg.appendChild(bubble);
+  messagesDiv.appendChild(msg);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  return msg;
 }
 
-// Hover glow
-document.addEventListener("mousemove",e=>{
-  document.querySelectorAll(".bubble").forEach(b=>{
-    const r=b.getBoundingClientRect(),cx=e.clientX-(r.left+r.width/2),cy=e.clientY-(r.top+r.height/2);
-    const d=Math.sqrt(cx*cx+cy*cy);
-    if(d<150)b.classList.add("glow");else b.classList.remove("glow");
-    b.style.setProperty("--shineX",`${cx}px`);b.style.setProperty("--shineY",`${cy}px`);
+// Hiệu ứng sáng khi di chuột
+document.addEventListener("mousemove", e => {
+  document.querySelectorAll(".bubble").forEach(b => {
+    const r = b.getBoundingClientRect(),
+      cx = e.clientX - (r.left + r.width / 2),
+      cy = e.clientY - (r.top + r.height / 2);
+    const d = Math.sqrt(cx * cx + cy * cy);
+    if (d < 150) b.classList.add("glow");
+    else b.classList.remove("glow");
+    b.style.setProperty("--shineX", `${cx}px`);
+    b.style.setProperty("--shineY", `${cy}px`);
   });
 });
 
-imgBtn.onclick=()=>fileInput.click();
-fileInput.onchange=e=>{Array.from(e.target.files).forEach(f=>{const r=new FileReader();r.onload=()=>{selectedImages.push(r.result);addMessage("", "user", false,[r.result]);};r.readAsDataURL(f);});};
-document.addEventListener("paste",e=>{for(const item of e.clipboardData.items){if(item.type.indexOf("image")!==-1){const f=item.getAsFile();const r=new FileReader();r.onload=()=>{selectedImages.push(r.result);addMessage("", "user", false,[r.result]);};r.readAsDataURL(f);}}});
+// Xử lý gửi ảnh
+imgBtn.onclick = () => fileInput.click();
+fileInput.onchange = e => {
+  Array.from(e.target.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = () => {
+      selectedImages.push(r.result);
+      addMessage("", "user", false, [r.result]);
+    };
+    r.readAsDataURL(f);
+  });
+};
 
-async function sendMessage(){
-  const text=input.value.trim();
-  if(!text&&selectedImages.length===0)return;
-  addMessage(text||"📷 Ảnh","user",false,selectedImages);
-  input.value="";
-  const typing=addMessage("", "ai", true);
-  try{
-    const msgs=[{role:"system",content:"Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh."}];
-    if(selectedImages.length>0){selectedImages.forEach(img=>msgs.push({role:"user",content:[{type:"image_url",image_url:img}]}));}
-    if(text)msgs.push({role:"user",content:text});
-    const res=await fetch(endpoint,{method:"POST",headers:{"Authorization":`Bearer ${API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:msgs})});
-    const data=await res.json();
-    typing.remove();
-    const reply=data?.choices?.[0]?.message?.content||"⚠️ Không có phản hồi từ AI.";
-    addMessage(reply,"ai");
-  }catch(e){
-    typing.remove();addMessage("❌ Lỗi kết nối hoặc API Key không hợp lệ.","ai");
+// Dán ảnh từ clipboard
+document.addEventListener("paste", e => {
+  for (const item of e.clipboardData.items) {
+    if (item.type.indexOf("image") !== -1) {
+      const f = item.getAsFile();
+      const r = new FileReader();
+      r.onload = () => {
+        selectedImages.push(r.result);
+        addMessage("", "user", false, [r.result]);
+      };
+      r.readAsDataURL(f);
+    }
   }
-  selectedImages=[];
+});
+
+// --- Gửi tin nhắn đến DeepSeek ---
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text && selectedImages.length === 0) return;
+
+  addMessage(text || "📷 Ảnh", "user", false, selectedImages);
+  input.value = "";
+
+  const typing = addMessage("", "ai", true);
+
+  try {
+    // Chuẩn bị message list
+    const msgs = [
+      {
+        role: "system",
+        content: "Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh."
+      }
+    ];
+
+    if (selectedImages.length > 0) {
+      selectedImages.forEach(img => {
+        msgs.push({
+          role: "user",
+          content: [
+            { type: "text", text: "Phân tích hình ảnh sau:" },
+            { type: "image_url", image_url: img }
+          ]
+        });
+      });
+    }
+
+    if (text) msgs.push({ role: "user", content: text });
+
+    // Gửi đến API DeepSeek
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: msgs
+      })
+    });
+
+    const data = await res.json();
+    typing.remove();
+
+    const reply = data?.choices?.[0]?.message?.content || "⚠️ Không có phản hồi từ AI.";
+    addMessage(reply, "ai");
+  } catch (e) {
+    typing.remove();
+    addMessage("❌ Lỗi kết nối hoặc API Key không hợp lệ.", "ai");
+  }
+
+  selectedImages = [];
 }
-sendBtn.onclick=sendMessage;
-input.addEventListener("keypress",e=>{if(e.key==="Enter")sendMessage();});
-modeToggle.onclick=()=>document.body.classList.toggle("light");
+
+sendBtn.onclick = sendMessage;
+input.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendMessage();
+});
+
+modeToggle.onclick = () => document.body.classList.toggle("light");
 
 // Modal
-const infoBtn=document.getElementById("infoBtn"),infoModal=document.getElementById("infoModal"),closeModal=document.getElementById("closeModal");
-infoBtn.onclick=()=>infoModal.classList.add("show");closeModal.onclick=()=>infoModal.classList.remove("show");
-window.onclick=e=>{if(e.target===infoModal)infoModal.classList.remove("show");};
+const infoBtn = document.getElementById("infoBtn"),
+  infoModal = document.getElementById("infoModal"),
+  closeModal = document.getElementById("closeModal");
+
+infoBtn.onclick = () => infoModal.classList.add("show");
+closeModal.onclick = () => infoModal.classList.remove("show");
+window.onclick = e => {
+  if (e.target === infoModal) infoModal.classList.remove("show");
+};
 </script>
+
 </body>
 </html>
+
 
 
