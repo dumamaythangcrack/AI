@@ -1,362 +1,323 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vextra AI Chat Bot</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTK AI Chat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+<style>
+:root {
+  --bg-dark: #0d1117;
+  --bg-light: #f5f5f5;
+  --text-dark: #c9d1d9;
+  --text-light: #0d1117;
+  --accent: #00c896;
+  --bubble-ai-dark: #1e2228;
+  --bubble-user-dark: #007c5c;
+  --bubble-ai-light: #e9e9eb;
+  --bubble-user-light: #4bd37f;
+}
 
-        :root {
-            --primary-color: #0d1117;
-            --secondary-color: #161b22;
-            --accent-color: #238636;
-            --text-color: #c9d1d9;
-            --ai-bubble-bg: #21262d;
-            --user-bubble-bg: #2ea043;
-            --border-color: #30363d;
-            --border-radius: 8px;
-            --shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.8s, color 0.8s;
+  background: var(--bg-dark);
+  color: var(--text-dark);
+  overflow: hidden;
+}
 
-        body {
-            font-family: 'Montserrat', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: var(--primary-color);
-            color: var(--text-color);
-            overflow: hidden;
-        }
+body::before {
+  content: "";
+  position: absolute;
+  width: 250%;
+  height: 250%;
+  background: radial-gradient(circle at 20% 20%, #00ff8844, transparent),
+              radial-gradient(circle at 80% 80%, #00ffff22, transparent),
+              radial-gradient(circle at 60% 40%, #ff00aa33, transparent);
+  filter: blur(120px);
+  animation: gradientMove 15s infinite alternate;
+  z-index: 0;
+}
+@keyframes gradientMove {
+  0% { transform: translate(0,0); }
+  100% { transform: translate(-10%, -10%); }
+}
 
-        .chat-container {
-            width: 95%;
-            max-width: 800px;
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--primary-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
+.chat-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+  backdrop-filter: blur(15px);
+  background: rgba(13, 17, 23, 0.85);
+  overflow: hidden;
+}
 
-        .chat-header {
-            background-color: var(--secondary-color);
-            color: #ffffff;
-            padding: 20px 25px;
-            font-size: 2em;
-            font-weight: 700;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-        }
+.chat-header {
+  background: rgba(22, 27, 34, 0.95);
+  padding: 14px;
+  font-size: 1.2em;
+  font-weight: 600;
+  border-bottom: 1px solid #30363d;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-header span { font-size: 0.7em; opacity: 0.7; }
 
-        .chat-messages {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background-color: var(--primary-color);
-            scroll-behavior: smooth;
-            border-bottom: 1px solid var(--border-color);
-        }
+.mode-toggle {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.2em;
+  cursor: pointer;
+}
 
-        .chat-messages::-webkit-scrollbar {
-            width: 8px;
-        }
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
+}
 
-        .chat-messages::-webkit-scrollbar-track {
-            background: var(--secondary-color);
-            border-radius: 10px;
-        }
+.message { margin: 6px 0; display: flex; animation: fadeIn 0.3s ease; }
+.message.user { justify-content: flex-end; }
+.message.ai { justify-content: flex-start; }
 
-        .chat-messages::-webkit-scrollbar-thumb {
-            background-color: var(--accent-color);
-            border-radius: 10px;
-            border: 2px solid var(--secondary-color);
-        }
+.bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word;
+  line-height: 1.4;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  white-space: pre-wrap;
+}
 
-        .message {
-            display: flex;
-            margin-bottom: 18px;
-            max-width: 75%;
-            position: relative;
-        }
+.user .bubble { background: var(--bubble-user-dark); color: white; border-bottom-right-radius: 4px; }
+.ai .bubble { background: var(--bubble-ai-dark); color: var(--text-dark); border-bottom-left-radius: 4px; }
 
-        .message.user {
-            justify-content: flex-end;
-            margin-left: auto;
-            padding-left: 20px;
-        }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.typing { font-style: italic; opacity: 0.7; font-size: 0.9em; }
 
-        .message.ai {
-            justify-content: flex-start;
-            margin-right: auto;
-            padding-right: 20px;
-        }
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: rgba(22,27,34,0.95);
+  border-top: 1px solid #30363d;
+  gap: 5px;
+}
 
-        .avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #58a6ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.1em;
-            font-weight: 700;
-            color: #fff;
-            margin-top: 5px;
-            flex-shrink: 0;
-        }
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: rgba(13,17,23,0.7);
+  color: var(--text-dark);
+  font-size: 1em;
+  outline: none;
+}
 
-        .message.user .avatar {
-            order: 2;
-            margin-left: 10px;
-            background-color: #a371f7;
-        }
+.file-input { display: none; }
 
-        .message.ai .avatar {
-            order: 0;
-            margin-right: 10px;
-            background-color: #58a6ff;
-        }
+.image-preview {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 4px;
+  border: 2px solid var(--accent);
+  position: relative;
+  cursor: pointer;
+}
+.image-preview:hover::after {
+  content: "✖";
+  color: red;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: white;
+  border-radius: 50%;
+  font-size: 0.7em;
+  padding: 0 2px;
+}
 
-        .message-bubble {
-            padding: 14px 20px;
-            border-radius: var(--border-radius);
-            line-height: 1.6;
-            word-wrap: break-word;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  color: var(--accent);
+  cursor: pointer;
+}
 
-        .message.user .message-bubble {
-            background-color: var(--user-bubble-bg);
-            color: #ffffff;
-            border-bottom-right-radius: 2px;
-        }
+.send-btn {
+  padding: 8px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+.send-btn:hover { background: #00e6a4; }
 
-        .message.ai .message-bubble {
-            background-color: var(--ai-bubble-bg);
-            color: var(--text-color);
-            border-bottom-left-radius: 2px;
-        }
+body.light { background: var(--bg-light); color: var(--text-light); }
+body.light .chat-container { background: rgba(255,255,255,0.9); }
+body.light .chat-header { background: rgba(245,245,245,0.9); }
+body.light .user .bubble { background: var(--bubble-user-light); }
+body.light .ai .bubble { background: var(--bubble-ai-light); color: var(--text-light); }
+body.light input { background: #fff; color: #000; }
 
-        .chat-input {
-            display: flex;
-            padding: 20px 25px;
-            border-top: 1px solid var(--border-color);
-            background-color: var(--secondary-color);
-        }
-
-        .chat-input input {
-            flex-grow: 1;
-            padding: 14px 18px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-size: 1.05em;
-            outline: none;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            background-color: var(--primary-color);
-            color: var(--text-color);
-        }
-
-        .chat-input input::placeholder {
-            color: #8b949e;
-        }
-
-        .chat-input input:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(46, 160, 67, 0.3);
-        }
-
-        .chat-input button {
-            background-color: var(--accent-color);
-            color: #fff;
-            border: none;
-            padding: 14px 25px;
-            border-radius: var(--border-radius);
-            margin-left: 15px;
-            cursor: pointer;
-            font-size: 1.05em;
-            font-weight: 700;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            flex-shrink: 0;
-        }
-
-        .chat-input button:hover {
-            background-color: #2ea043;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-        }
-
-        .chat-input button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
-    </style>
+@media (max-width: 600px) {
+  .chat-header { font-size: 1em; padding: 10px; }
+  input[type="text"] { font-size: 0.95em; }
+  .send-btn { padding: 7px 12px; font-size: 0.95em; }
+}
+</style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            Vextra AI Chat
-        </div>
-        <div class="chat-messages" id="chatMessages">
-            </div>
-        <div class="chat-input">
-            <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off">
-            <button id="sendButton">Send</button>
-        </div>
-    </div>
+<div class="chat-container">
+  <div class="chat-header">
+    🤖 TTK AI <span>Dev by Trần Tuấn Khang</span>
+    <button class="mode-toggle" id="modeToggle">🌓</button>
+  </div>
 
-    <script type="module">
+  <div id="messages" class="chat-messages"></div>
 
-        import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
+  <div class="chat-input">
+    <button class="icon-btn" id="imgBtn">🖼️</button>
+    <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
+    <input id="input" type="text" placeholder="Nhập tin nhắn hoặc mô tả ảnh...">
+    <button id="send" class="send-btn">Gửi</button>
+  </div>
+</div>
 
-        const API_KEY = "AIzaSyD-oqvt-tYxansOH7ze9vAK71CDhquYdfA";
-        const genAI = new GoogleGenerativeAI(API_KEY);
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>
+const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
+const MODEL = "gemini-2.0-flash";
+const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
 
-        const chatMessages = document.getElementById('chatMessages');
-        const userInput = document.getElementById('userInput');
-        const sendButton = document.getElementById('sendButton');
+const messagesDiv = document.getElementById("messages");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+const modeToggle = document.getElementById("modeToggle");
+const imgBtn = document.getElementById("imgBtn");
+const fileInput = document.getElementById("fileInput");
 
-        const userId = getOrCreateUserId();
+let selectedImages = [];
 
-        let chatHistory = loadChatHistory(userId);
-        let model;
-        let chat;
+function renderMessageContent(text){
+  const container = document.createElement("div");
+  container.innerHTML = marked.parse(text);
+  container.querySelectorAll('pre code').forEach((el)=>hljs.highlightElement(el));
+  return container;
+}
 
-        initializeChat();
+function addMessage(text,sender,isTyping=false,images=[]){
+  const msg = document.createElement("div");
+  msg.className = `message ${sender}`;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
 
-        function getOrCreateUserId() {
-            let id = localStorage.getItem('chatUserId');
-            if (!id) {
-                id = 'user_' + Date.now();
-                localStorage.setItem('chatUserId', id);
-            }
-            return id;
-        }
+  images.forEach(src=>{
+    const img=document.createElement("img");
+    img.src=src;
+    img.className="image-preview";
+    img.onclick=()=>{selectedImages=selectedImages.filter(s=>s!==src); img.remove();};
+    bubble.appendChild(img);
+  });
 
-        function loadChatHistory(id) {
-            try {
-                const history = JSON.parse(localStorage.getItem(`chatHistory_${id}`)) || [];
-                return history.map(item => ({
-                    role: item.role,
-                    parts: [{ text: item.text }]
-                }));
-            } catch (e) {
-                console.error("Error loading chat history:", e);
-                return [];
-            }
-        }
+  bubble.appendChild(renderMessageContent(text));
+  if(isTyping) bubble.classList.add("typing");
+  msg.appendChild(bubble);
+  messagesDiv.appendChild(msg);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  return msg;
+}
 
-        function saveChatHistory(id, history) {
-            try {
-                const simplifiedHistory = history.map(item => ({
-                    role: item.role,
-                    text: item.parts[0].text
-                }));
-                localStorage.setItem(`chatHistory_${id}`, JSON.stringify(simplifiedHistory));
-            } catch (e) {
-                console.error("Error saving chat history:", e);
-            }
-        }
+imgBtn.onclick = ()=>fileInput.click();
 
-        function appendMessage(sender, text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', sender);
+fileInput.onchange = e=>{
+  const files = Array.from(e.target.files);
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      selectedImages.push(reader.result);
+      addMessage("", "user", false, [reader.result]);
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
-            const avatarDiv = document.createElement('div');
-            avatarDiv.classList.add('avatar');
-            avatarDiv.textContent = sender === 'user' ? 'You' : 'AI';
-            messageDiv.appendChild(avatarDiv);
+document.addEventListener("paste", e=>{
+  const items = e.clipboardData.items;
+  for(let i=0;i<items.length;i++){
+    if(items[i].type.indexOf("image")!==-1){
+      const file = items[i].getAsFile();
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        selectedImages.push(reader.result);
+        addMessage("", "user", false, [reader.result]);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+});
 
-            const messageBubble = document.createElement('div');
-            messageBubble.classList.add('message-bubble');
-            messageBubble.textContent = text;
-            messageDiv.appendChild(messageBubble);
+async function sendMessage(){
+  const text = input.value.trim();
+  if(!text && selectedImages.length===0) return;
 
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+  addMessage(text || "📷 Ảnh", "user", false, selectedImages);
+  input.value="";
+  const typingMsg = addMessage("TTK AI đang gõ...", "ai", true);
 
-        function displayChatHistory() {
-            chatMessages.innerHTML = '';
-            chatHistory.forEach(msg => {
-                if (msg.role === 'user') {
-                    appendMessage('user', msg.parts[0].text);
-                } else if (msg.role === 'model') {
-                    appendMessage('ai', msg.parts[0].text);
-                }
-            });
+  try{
+    const parts=[];
+    selectedImages.forEach(img=>parts.push({inline_data:{mime_type:"image/png",data:img.split(",")[1]}}));
+    if(text) parts.push({text});
 
-            if (chatHistory.length === 0) {
-                appendMessage('ai', "Hello! I'm Vextra AI. How can I help you today? I can help you in code script or fix some issue");
-            }
-        }
+    const res = await fetch(endpoint,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts}]})
+    });
 
-        async function initializeChat() {
-            try {
+    const data = await res.json();
+    typingMsg.remove();
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi từ AI.";
+    addMessage(reply,"ai");
+  }catch(err){
+    typingMsg.remove();
+    addMessage("❌ Lỗi kết nối hoặc key không hợp lệ.","ai");
+  }
 
-                model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
-                
-                chat = model.startChat({
-                    history: chatHistory,
-                    generationConfig: {
-                        maxOutputTokens: 500,
-                    },
-                });
-                displayChatHistory();
-            } catch (error) {
-                console.error("Failed to initialize chat model:", error);
-                appendMessage('ai', "Sorry, I couldn't initialize the AI assistant. Please check your API Key and network connection.");
-            }
-        }
+  selectedImages=[];
+}
 
-        async function sendMessage() {
-            const userText = userInput.value.trim();
-            if (userText === '') return;
+sendBtn.onclick=sendMessage;
+input.addEventListener("keypress",e=>{if(e.key==="Enter")sendMessage();});
+modeToggle.onclick=()=>document.body.classList.toggle("light");
 
-            appendMessage('user', userText);
-            userInput.value = '';
-
-            try {
-
-                if (!chat) {
-                    appendMessage('ai', "AI assistant is not ready. Please wait a moment or reload the page.");
-                    return;
-                }
-                
-                const result = await chat.sendMessage(userText);
-                const response = await result.response;
-                const aiText = response.text();
-                appendMessage('ai', aiText);
-
-                // Add current exchange to chat history
-                chatHistory.push({ role: 'user', parts: [{ text: userText }] });
-                chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
-                saveChatHistory(userId, chatHistory);
-
-            } catch (error) {
-                console.error("Error sending message to AI:", error);
-                appendMessage('ai', "Sorry, there was an error processing your request. Please try again.");
-            }
-        }
-
-        sendButton.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-    </script>
+addMessage("Xin chào 👋! Mình là **TTK AI** – trợ lý ảo của bạn. Hãy gửi tin nhắn hoặc ảnh để mình giúp nhé!","ai");
+</script>
 </body>
 </html>
-
-
-
