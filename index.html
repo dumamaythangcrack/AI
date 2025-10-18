@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat V2.0 - Monochrome</title>
+<title>TTK AI Chat V2.1 - Monochrome</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -238,6 +238,31 @@ body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
   100%{opacity:1;transform:translateY(0) scale(1);}
 }
 
+/* Spinner animation */
+.ai-spinner{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.ai-spinner .spinner{
+  width:20px;
+  height:20px;
+  border:3px solid rgba(255,255,255,0.2);
+  border-top:3px solid var(--accent);
+  border-radius:50%;
+  animation: spin 1s linear infinite;
+}
+.ai-spinner span{
+  font-size:0.85em;
+  color: var(--text-dark);
+}
+
+/* Keyframes spin */
+@keyframes spin{
+  0%{transform:rotate(0deg);}
+  100%{transform:rotate(360deg);}
+}
+
 /* Modal */
 #infoModal{
   position:fixed;top:0;left:0;width:100%;height:100%;
@@ -287,7 +312,7 @@ body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
 <div id="infoModal">
   <div class="modal-content">
     <button class="close-btn" id="closeModal">&times;</button>
-    <h2>TTK AI V2.0</h2>
+    <h2>TTK AI V2.1</h2>
     <p><strong>Mô hình nền tảng:</strong> Gemini 2.0 Flash</p>
     <p><strong>Developer:</strong> Trần Tuấn Khang</p>
   </div>
@@ -296,7 +321,7 @@ body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
-// === GIỮ NGUYÊN TOÀN BỘ LOGIC JS HIỆN TẠI ===
+// === GIỮ NGUYÊN LOGIC JS ===
 const API_KEY="AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
 const MODEL="gemini-2.0-flash";
 const endpoint=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
@@ -345,8 +370,21 @@ function addMessage(text,sender,isTyping=false,images=[]){
     img.onclick=()=>{selectedImages=selectedImages.filter(s=>s!==src); img.remove();};
     bubble.appendChild(img);
   });
-  bubble.appendChild(renderMessageContent(text));
-  if(isTyping) bubble.classList.add("typing");
+
+  if(isTyping && sender==="ai"){
+    const spinnerDiv=document.createElement("div");
+    spinnerDiv.className="ai-spinner";
+    const spinnerCircle=document.createElement("div");
+    spinnerCircle.className="spinner";
+    const spanText=document.createElement("span");
+    spanText.textContent="Processing...";
+    spinnerDiv.appendChild(spinnerCircle);
+    spinnerDiv.appendChild(spanText);
+    bubble.appendChild(spinnerDiv);
+  } else {
+    bubble.appendChild(renderMessageContent(text));
+  }
+
   msg.appendChild(bubble);
   messagesDiv.appendChild(msg);
   setTimeout(()=>msg.classList.add("show"),50);
@@ -372,12 +410,13 @@ document.addEventListener("paste",e=>{
     }
   }
 });
+
 async function sendMessage(){
   const text=input.value.trim();
   if(!text && selectedImages.length===0) return;
   addMessage(text||"📷 Ảnh","user",false,selectedImages);
   input.value="";
-  const typingMsg=addMessage("TTK AI đang gõ...","ai",true);
+  const typingMsg=addMessage("", "ai", true);
   try{
     const parts=[];
     selectedImages.forEach(img=>parts.push({inline_data:{mime_type:"image/png",data:img.split(",")[1]}}));
@@ -393,12 +432,13 @@ async function sendMessage(){
   }
   selectedImages=[];
 }
+
 sendBtn.onclick=sendMessage;
 input.addEventListener("keypress",e=>{if(e.key==="Enter") sendMessage();});
 modeToggle.onclick=()=>document.body.classList.toggle("light");
 addMessage("Xin chào 👋! Mình là **TTK AI** – trợ lý ảo của bạn. Hãy gửi tin nhắn hoặc ảnh để mình giúp nhé!","ai");
 
-// === Info Modal Logic ===
+// Info Modal Logic
 const infoBtn=document.getElementById("infoBtn");
 const infoModal=document.getElementById("infoModal");
 const closeModal=document.getElementById("closeModal");
