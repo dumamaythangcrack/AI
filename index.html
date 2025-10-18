@@ -142,11 +142,11 @@ window.addEventListener("load", () => {
 });
 
 // 🔑 Cấu hình API DeepSeek
-const API_KEY = "sk-b724c5a5ce784f79bf2438f4eb16d7e8"; // 🔥 Thay bằng key thật từ https://platform.deepseek.com
-const MODEL = "deepseek-chat"; // Model chính thức DeepSeek
+const API_KEY = "sk-b724c5a5ce784f79bf2438f4eb16d7e8"; // Thay bằng key DeepSeek thật
+const MODEL = "deepseek-chat"; // Model DeepSeek
 const ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
-// --- Biến và phần tử giao diện ---
+// --- Biến & phần tử giao diện ---
 const messagesDiv = document.getElementById("messages");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
@@ -204,11 +204,10 @@ function addMessage(text, sender, isTyping = false, imgs = []) {
 document.addEventListener("mousemove", e => {
   document.querySelectorAll(".bubble").forEach(b => {
     const r = b.getBoundingClientRect(),
-      cx = e.clientX - (r.left + r.width / 2),
-      cy = e.clientY - (r.top + r.height / 2);
-    const d = Math.sqrt(cx * cx + cy * cy);
-    if (d < 150) b.classList.add("glow");
-    else b.classList.remove("glow");
+      cx = e.clientX - (r.left + r.width/2),
+      cy = e.clientY - (r.top + r.height/2);
+    const d = Math.sqrt(cx*cx + cy*cy);
+    if (d < 150) b.classList.add("glow"); else b.classList.remove("glow");
     b.style.setProperty("--shineX", `${cx}px`);
     b.style.setProperty("--shineY", `${cy}px`);
   });
@@ -249,16 +248,12 @@ async function sendMessage() {
 
   addMessage(text || "📷 Ảnh", "user", false, selectedImages);
   input.value = "";
-
   const typing = addMessage("", "ai", true);
 
   try {
     // Chuẩn bị message list
     const msgs = [
-      {
-        role: "system",
-        content: "Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh."
-      }
+      { role: "system", content: "Bạn là trợ lý AI DeepSeek thân thiện, thông minh và có khả năng phân tích hình ảnh." }
     ];
 
     if (selectedImages.length > 0) {
@@ -275,17 +270,14 @@ async function sendMessage() {
 
     if (text) msgs.push({ role: "user", content: text });
 
-    // Gửi đến API DeepSeek
+    // Gửi request đến DeepSeek
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: msgs
-      })
+      body: JSON.stringify({ model: MODEL, messages: msgs, stream: false })
     });
 
     const data = await res.json();
@@ -293,7 +285,7 @@ async function sendMessage() {
 
     const reply = data?.choices?.[0]?.message?.content || "⚠️ Không có phản hồi từ AI.";
     addMessage(reply, "ai");
-  } catch (e) {
+  } catch(e) {
     typing.remove();
     addMessage("❌ Lỗi kết nối hoặc API Key không hợp lệ.", "ai");
   }
@@ -302,26 +294,23 @@ async function sendMessage() {
 }
 
 sendBtn.onclick = sendMessage;
-input.addEventListener("keypress", e => {
-  if (e.key === "Enter") sendMessage();
-});
-
+input.addEventListener("keypress", e => { if(e.key === "Enter") sendMessage(); });
 modeToggle.onclick = () => document.body.classList.toggle("light");
 
-// Modal
+// Modal info
 const infoBtn = document.getElementById("infoBtn"),
-  infoModal = document.getElementById("infoModal"),
-  closeModal = document.getElementById("closeModal");
+      infoModal = document.getElementById("infoModal"),
+      closeModal = document.getElementById("closeModal");
 
 infoBtn.onclick = () => infoModal.classList.add("show");
 closeModal.onclick = () => infoModal.classList.remove("show");
-window.onclick = e => {
-  if (e.target === infoModal) infoModal.classList.remove("show");
-};
+window.onclick = e => { if(e.target === infoModal) infoModal.classList.remove("show"); };
+
 </script>
 
 </body>
 </html>
+
 
 
 
