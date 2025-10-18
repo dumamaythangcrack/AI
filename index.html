@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat - Cyberpunk</title>
+<title>TTK AI Chat - Ultimate Cyberpunk</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -14,6 +14,7 @@
   --text-light:#0d1117;
   --accent:#00ffcc;
   --accent-hover:#00e6a4;
+  --accent2:#ff00ff;
   --bubble-ai-dark:#101218;
   --bubble-user-dark:#005f5f;
   --bubble-ai-light:#e9e9eb;
@@ -35,7 +36,7 @@ body{
   perspective:1000px;
 }
 
-/* Hình nền gradient 3D Cyberpunk */
+/* Hình nền gradient 3D Cyberpunk + noise động */
 body::before{
   content:"";
   position:absolute;
@@ -45,13 +46,13 @@ body::before{
               radial-gradient(circle at 70% 70%, #ff00ff33, transparent),
               radial-gradient(circle at 50% 50%, #00ffff33, transparent),
               linear-gradient(45deg, #ff008844, #00ff8844, #0088ff33);
-  filter: blur(180px);
+  filter: blur(180px) contrast(1.2);
   transform: translate3d(0,0,0);
   transition: transform 0.1s;
   z-index:0;
 }
 
-/* Header với Glitch mạnh hơn */
+/* Header nâng cấp với Clip-Path + Glitch */
 header{
   padding:15px 25px;
   background: rgba(15,15,25,0.95);
@@ -59,7 +60,7 @@ header{
   justify-content:space-between;
   align-items:center;
   border-bottom:2px solid #30363d;
-  border-radius:0;
+  clip-path: polygon(0 0, 100% 5%, 100% 95%, 0 100%);
   z-index:1;
   position:relative;
   text-shadow: 0 0 5px var(--accent), 0 0 15px var(--glitch-color);
@@ -68,9 +69,9 @@ header{
 header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--accent);}
 @keyframes glitch-header{
   0%{text-shadow:0 0 5px var(--accent);}
-  25%{text-shadow:2px 1px 10px var(--glitch-color);}
-  50%{text-shadow:-2px -1px 15px var(--accent-hover);}
-  75%{text-shadow:1px 0 8px var(--glitch-color);}
+  25%{text-shadow:2px 1px 12px var(--glitch-color);}
+  50%{text-shadow:-2px -1px 18px var(--accent-hover);}
+  75%{text-shadow:1px 0 10px var(--glitch-color);}
   100%{text-shadow:0 0 5px var(--accent);}
 }
 
@@ -84,8 +85,8 @@ header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--ac
   text-shadow: 0 0 3px var(--accent);
 }
 .mode-toggle:hover{
-  transform:rotate(25deg);
-  text-shadow:0 0 10px var(--accent),0 0 20px #ff00ff;
+  transform:rotate(25deg) scale(1.1);
+  text-shadow:0 0 12px var(--accent),0 0 25px var(--accent2);
 }
 
 /* Messages */
@@ -100,52 +101,60 @@ header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--ac
   z-index:1;
   position:relative;
 }
-#messages::-webkit-scrollbar{width:10px;}
-#messages::-webkit-scrollbar-track{background:#000;}
+#messages::-webkit-scrollbar{width:12px;}
+#messages::-webkit-scrollbar-track{background:#0a0a0f;}
 #messages::-webkit-scrollbar-thumb{
   background:linear-gradient(45deg,#00ffcc,#ff00ff);
-  border-radius:5px;
+  border-radius:2px;
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
 }
 
-/* Bubble + animation + Neon/Glass + Scanline */
+/* Bubble + Scanline/Noise + Glitch Fade-in */
 .message{
   display:flex;
   max-width:75%;
   opacity:0;
-  transform:translateY(20px);
-  animation: fade-glitch 0.6s forwards;
+  transform:translateY(20px) skewX(-3deg);
+  animation: glitch-fade 0.7s forwards;
   position:relative;
   transition:0.3s;
 }
 .message.user{align-self:flex-end;justify-content:flex-end;}
 .message.ai{align-self:flex-start;justify-content:flex-start;}
 .bubble{
-  padding:14px 18px;
-  border-radius:15px 5px 15px 5px; /* góc cạnh */
+  padding:16px 20px;
   word-wrap:break-word;
   line-height:1.5;
   white-space:pre-wrap;
   display:flex;
   flex-direction:column;
   gap:8px;
-  backdrop-filter:blur(15px) saturate(200%);
+  backdrop-filter:blur(18px) saturate(250%);
   border:1px solid rgba(0,255,255,0.3);
   position:relative;
   transition:0.2s, box-shadow 0.3s, transform 0.3s;
   overflow:hidden;
   text-shadow:0 0 2px #00ffcc;
 }
-.user .bubble{background:rgba(0,95,95,0.5);color:#fff;}
+.user .bubble{
+  background:rgba(0,95,95,0.5);
+  color:#fff;
+  border-radius:5px 20px 5px 20px;
+  border-left:3px solid #00ffcc;
+}
 .ai .bubble{
   background:rgba(16,18,24,0.6);
   color:var(--text-dark);
+  border-radius:20px 5px 20px 5px;
+  border-right:3px solid #ff00ff;
   background-image: repeating-linear-gradient(
     0deg,
     rgba(255,255,255,0.02),
     rgba(255,255,255,0.02) 1px,
     transparent 1px,
-    transparent 2px
-  ); /* scanline */
+    transparent 3px
+  );
+  filter:contrast(1.1);
 }
 .bubble::before{
   content:"";
@@ -153,17 +162,17 @@ header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--ac
   top:0; left:0;
   width:100%; height:100%;
   pointer-events:none;
-  background: radial-gradient(circle at 50% 50%, rgba(0,255,255,0.1), transparent 60%);
+  background: radial-gradient(circle at 50% 50%, rgba(0,255,255,0.08), transparent 60%);
   mix-blend-mode:screen;
   transform:translate(0,0);
   transition: transform 0.1s;
 }
 .bubble.glow{
-  box-shadow: 0 0 20px var(--accent),
-              0 0 40px var(--accent-hover),
-              0 0 60px var(--glitch-color),
-              0 0 80px var(--accent);
-  transform: scale(1.05);
+  box-shadow: 0 0 25px var(--accent),
+              0 0 50px var(--accent-hover),
+              0 0 80px var(--accent2),
+              0 0 100px var(--accent);
+  transform: scale(1.07) skewX(1deg);
 }
 .bubble.glitch::after{
   content: attr(data-text);
@@ -176,9 +185,9 @@ header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--ac
 }
 
 .typing{font-style:italic;opacity:0.7;}
-@keyframes fade-glitch{
-  0%{opacity:0;transform:translateY(20px) skewX(-2deg);}
-  50%{opacity:0.5;transform:translateY(0) skewX(1deg);}
+@keyframes glitch-fade{
+  0%{opacity:0;transform:translateY(25px) skewX(-5deg);}
+  50%{opacity:0.5;transform:translateY(0) skewX(2deg);}
   100%{opacity:1;transform:translateY(0) skewX(0);}
 }
 @keyframes glitch{
@@ -190,55 +199,57 @@ header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--ac
   100%{transform:translate(0,0);}
 }
 
-/* Avatar */
+/* Avatar Neon */
 .avatar{
-  width:40px;
-  height:40px;
+  width:42px;
+  height:42px;
   border-radius:50%;
   margin-right:10px;
   flex-shrink:0;
-  box-shadow: 0 4px 15px var(--accent);
+  box-shadow: 0 4px 20px var(--accent);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 .message.ai .avatar{background:#00ffcc url('https://i.ibb.co/7pF0g1R/robot.png') center/cover no-repeat;}
 .message.user .avatar{background:#005f5f url('https://i.ibb.co/Y0w6nLc/user.png') center/cover no-repeat;}
 .message.ai .avatar:hover,
 .message.user .avatar:hover{
-  transform: scale(1.15) rotate(-5deg);
-  box-shadow: 0 6px 25px var(--accent-hover);
+  transform: scale(1.2) rotate(-8deg);
+  box-shadow: 0 6px 30px var(--accent-hover), 0 0 40px var(--accent2);
 }
 
-/* Chat input */
+/* Chat input Neon & double-border */
 .chat-input{
   display:flex;
   padding:14px;
   gap:10px;
   background: rgba(15,15,25,0.95);
   border-top:2px solid #30363d;
-  border-radius:0; /* nhọn */
-  z-index:1;
+  border-radius:0;
   position:relative;
+  z-index:1;
+  box-shadow: 0 0 8px var(--accent), 0 0 15px var(--accent2);
 }
 .chat-input input[type="text"]{
   flex:1;
   padding:14px;
   border-radius:0;
-  border:1px solid rgba(0,255,255,0.3);
+  border:2px solid #00ffcc;
   background: rgba(0,0,0,0.6);
   color: #e0f7ff;
   font-family:'Share Tech Mono','Orbitron',monospace;
   font-size:1em;
   outline:none;
   transition:0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 5px var(--accent), 0 0 15px var(--accent2);
 }
 .chat-input input[type="text"]:focus{
-  box-shadow: 0 0 15px var(--accent),0 0 30px var(--glitch-color);
+  box-shadow: 0 0 15px var(--accent),0 0 30px var(--accent2), 0 0 50px var(--accent2);
   border-color: var(--accent);
 }
 .send-btn{
-  padding:12px 20px;
+  padding:12px 22px;
   border:none;
-  border-radius:0; /* nhọn */
+  border-radius:0;
   background: linear-gradient(135deg,var(--accent),var(--accent-hover));
   color:#0a0a0f;
   font-weight:bold;
@@ -246,23 +257,24 @@ header span{font-size:0.9em;opacity:0.7;color:#ccc;text-shadow: 0 0 3px var(--ac
   font-family:'Orbitron','Share Tech Mono',monospace;
   transition:0.3s, box-shadow 0.3s;
   text-shadow:0 0 5px #00ffcc;
+  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent2), 0 0 30px var(--accent2);
 }
 .send-btn:hover{
   background: linear-gradient(135deg,var(--accent-hover),#ff00ff);
-  box-shadow:0 0 20px var(--accent-hover),0 0 40px #ff00ff;
+  box-shadow:0 0 25px var(--accent-hover),0 0 40px #ff00ff,0 0 60px #00ffcc;
 }
 .icon-btn{
   background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;
   transition:0.3s,text-shadow 0.3s;
 }
-.icon-btn:hover{text-shadow:0 0 10px var(--accent),0 0 25px #ff00ff;}
+.icon-btn:hover{text-shadow:0 0 12px var(--accent),0 0 30px var(--accent2);}
 .file-input{display:none;}
 .image-preview{
   width:70px;height:70px;border-radius:12px;object-fit:cover;border:2px solid var(--accent);cursor:pointer;position:relative;
   transition:0.3s, box-shadow 0.3s;
 }
 .image-preview:hover{
-  box-shadow:0 0 15px var(--accent),0 0 25px #ff00ff;
+  box-shadow:0 0 20px var(--accent),0 0 35px var(--accent2);
 }
 .image-preview:hover::after{
   content:"✖";position:absolute;top:-6px;right:-6px;background:white;color:red;border-radius:50%;font-size:0.8em;padding:0 3px;
