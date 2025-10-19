@@ -661,9 +661,11 @@ body.light .toast { background: rgba(255,255,255,0.95); color: var(--text-light)
 'use strict';
 
 // ===== CONFIGURATION & CONSTANTS =====
+// ...
 const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
-const MODEL = "gemini-1.5-flash";
+const MODEL = "gemini-1.5-flash"; // <<<< LỖI NẰM Ở ĐÂY
 const CHAT_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`;
+// ...
 const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/imagen-3.0-generate-002:generateImage?key=${API_KEY}`;
 const STORAGE_KEY = 'gpt_sessions_v1';
 const LAST_SESSION_KEY = 'last_session_id';
@@ -1797,6 +1799,7 @@ Example allSessions after user has 2 conversations:
 </script>
 </body>
 </html>
+
 
 
 
