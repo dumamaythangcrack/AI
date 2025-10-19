@@ -3,552 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat V2.0 - Gemini Streaming & Vision</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>TTK AI Chat - Gemini 2.5 Flash + Imagen 3.0</title>
+
+<!-- Highlight.js & Marked.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
 <style>
 :root{
-  --bg-dark:#0a0a0f;
-  --bg-light:#f9f9f9;
-  --text-dark:#e0e0e0;
-  --text-light:#111;
-  --accent:#a855f7;
-  --accent-hover:#b366ff;
-  --bubble-ai-dark:rgba(30,30,30,0.75);
-  --bubble-user-dark:rgba(50,50,50,0.55);
-  --bubble-ai-light:rgba(245,245,245,0.85);
-  --bubble-user-light:rgba(220,220,220,0.8);
-  --modal-bg: rgba(20,20,20,0.7);
+  --bg:#0b0b10; --text:#f0f0f0; --accent:#a855f7; --bubble-ai:rgba(25,25,25,0.7);
+  --bubble-user:rgba(50,50,50,0.6); --modal-bg:rgba(15,15,15,0.9);
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:'Inter',sans-serif;
-  background: var(--bg-dark);
-  color: var(--text-dark);
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  position:relative;
-  transition:0.5s background ease,color 0.5s;
-}
-body::before{
-  content:"";
-  position:absolute;
-  width:100%;
-  height:100%;
-  background: rgba(15,15,15,0.4);
-  filter: blur(50px);
-  transform: translate3d(0,0,0);
-  z-index:0;
-}
-
-/* === Splash Screen === */
-#splashScreen{
-  position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background: var(--bg-dark);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-  opacity:1;
-  transition: opacity 0.8s ease;
-}
-#splashScreen.hidden{opacity:0;pointer-events:none;}
-#splashScreen .ai-spinner{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-#splashScreen .ai-spinner .spinner{
-  width:30px;
-  height:30px;
-  border:4px solid rgba(255,255,255,0.2);
-  border-top:4px solid var(--accent);
-  border-radius:50%;
-  animation: spin 1s linear infinite;
-}
-#splashScreen span{
-  font-size:1.1em;
-  color: var(--text-dark);
-  font-weight:500;
-  margin-top:10px;
-}
-
-/* Spinner keyframes */
-@keyframes spin{
-  0%{transform:rotate(0deg);}
-  100%{transform:rotate(360deg);}
-}
-
-/* === Spinner Bubble AI === */
-.message.ai .ai-spinner{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.message.ai .ai-spinner .spinner{
-  width:20px;
-  height:20px;
-  border:2px solid rgba(255,255,255,0.2);
-  border-top:2px solid var(--accent);
-  border-radius:50%;
-  animation: spin 1s linear infinite;
-}
-.message.ai .ai-spinner span{
-  font-size:0.85em;
-  color: var(--text-dark);
-}
-
-/* === CSS CỐT LÕI (Giữ nguyên) === */
-header{
-  padding:15px 25px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background: rgba(20,20,20,0.5);
-  backdrop-filter: blur(12px);
-  border-radius:12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-  position:relative;
-  z-index:1;
-  transition: all 0.4s ease;
-}
-header span{ font-size:0.9em; opacity:0.7; color: var(--text-dark);}
-.mode-toggle,.info-btn{ background:none; border:none; color:inherit; font-size:1.5em; cursor:pointer; transition:all 0.3s ease; margin-left:10px;}
-.mode-toggle:hover,.info-btn:hover{ transform:scale(1.05);}
-#messages{ flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px; z-index:1; position:relative; scroll-behavior:smooth;}
-#messages::-webkit-scrollbar{width:8px;}
-#messages::-webkit-scrollbar-track{background:transparent;}
-#messages::-webkit-scrollbar-thumb{ background: var(--accent); border-radius:8px;}
-.message{ display:flex; max-width:75%; opacity:0; transform:translateY(20px) scale(0.95); animation: slide-up 0.5s ease-out forwards; position:relative;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;margin:0;}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:rgba(20,20,20,0.5);backdrop-filter:blur(10px);}
+header h1{font-family:'Orbitron',monospace;font-size:1.1em;margin:0;}
+header button{background:none;border:none;color:var(--text);cursor:pointer;font-size:1.2em;margin-left:10px;}
+#messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+.message{display:flex;max-width:75%;animation:fadeIn .3s ease forwards;}
 .message.user{align-self:flex-end;}
 .message.ai{align-self:flex-start;}
-.bubble{ padding:16px 20px; word-wrap:break-word; line-height:1.5; white-space:pre-wrap; display:flex; flex-direction:column; gap:8px; backdrop-filter:blur(12px); background: var(--bubble-ai-dark); border-radius:12px; position:relative; transition:0.3s; overflow:hidden;}
-.user .bubble{ background:var(--bubble-user-dark); color: var(--text-dark);}
-.ai .bubble{ padding:20px 25px; border-radius:16px 16px 16px 4px; background: var(--bubble-ai-dark); border-left: 3px solid var(--accent);}
-/* CSS cho Code Highlighting (Marked.js + Highlight.js) */
-.ai .bubble pre{ background: rgba(25,25,25,0.7); border-left: 2px solid #555; border-radius:6px; padding:10px 14px; overflow-x:auto; font-family:'Share Tech Mono','Orbitron',monospace; color: var(--text-dark);}
-.ai .bubble code{ background: rgba(50,50,50,0.3); border-radius:4px; padding:2px 6px; font-family:'Share Tech Mono','Orbitron',monospace; color:var(--accent);}
-.ai .bubble pre code { padding: 0; background: none; border: none; } /* Reset cho khối code lớn */
-
-.avatar{ width:42px; height:42px; border-radius:50%; margin-right:10px; flex-shrink:0; transition: transform 0.3s;}
-.message.ai .avatar{background:#a855f7 url('https://i.ibb.co/dsCLWn26/images.jpg') center/cover no-repeat;}
-.message.user .avatar{background:#555 url('https://i.ibb.co/PsYbWjjR/png-clipart-aspria-fitness-computer-icons-user-my-account-icon-miscellaneous-monochrome-thumbnail.png') center/cover no-repeat;}
-.message.ai .avatar:hover,.message.user .avatar:hover{ transform: scale(1.1);}
-.chat-input{ display:flex; padding:14px; gap:10px; background: rgba(20,20,20,0.5); backdrop-filter: blur(12px); border-radius:16px; position:relative; z-index:1;}
-.chat-input input[type="text"]{ flex:1; padding:14px; border-radius:12px; border:none; background: rgba(255,255,255,0.08); color: var(--text-dark); font-family:'Inter',sans-serif; font-size:1em; outline:none; transition:0.3s;}
-.chat-input input[type="text"]:focus{ box-shadow: 0 0 6px var(--accent); background: rgba(255,255,255,0.12);}
-.send-btn{ padding:12px 22px; border:none; border-radius:12px; background: var(--accent); color:#fff; font-weight:bold; cursor:pointer; font-family:'Orbitron','Share Tech Mono',monospace; transition:0.3s;}
-.send-btn:hover{ box-shadow:0 0 6px var(--accent);}
-.icon-btn{ background:none;border:none;font-size:1.5em;color:var(--accent);cursor:pointer;transition:0.3s;}
-.icon-btn:hover{ text-shadow:0 0 6px var(--accent);}
-.file-input{display:none;}
-/* Sửa đổi: image-preview dùng chung cho cả user và AI */
-.bubble .image-preview{ 
-  max-width: 250px; /* Giới hạn kích thước ảnh preview */
-  height: auto;
-  border-radius:12px;
-  object-fit:cover;
-  border:2px solid var(--accent);
-  cursor:pointer;
-  position:relative; 
-  transition:0.3s;
-}
-.bubble .image-preview:hover{ box-shadow:0 0 6px var(--accent);}
-
-body.light{ background:var(--bg-light); color:var(--text-light);}
-body.light .ai .bubble{background:var(--bubble-ai-light);color:var(--text-light);}
-body.light .user .bubble{background:var(--bubble-user-light);}
-body.light .chat-input input{background:rgba(255,255,255,0.8);color:#111;}
-@keyframes slide-up{0%{opacity:0;transform:translateY(20px) scale(0.95);}100%{opacity:1;transform:translateY(0) scale(1);}}
-
-/* Info Modal */
-#infoModal{ position:fixed;top:0;left:0;width:100%;height:100%; background: rgba(0,0,0,0.5); display:flex;justify-content:center;align-items:center; opacity:0;pointer-events:none;transition:0.3s; z-index:10;}
-#infoModal.show{ opacity:1;pointer-events:auto;}
-#infoModal .modal-content{ background: var(--modal-bg); backdrop-filter: blur(12px); padding:20px 30px; border-radius:16px; max-width:400px; text-align:center; color: var(--text-dark); position:relative;}
-#infoModal .modal-content h2{margin-bottom:10px;font-family:'Orbitron',monospace;}
-#infoModal .modal-content p{margin:6px 0;}
-#infoModal .close-btn{ position:absolute;top:10px;right:15px; background:none;border:none;color:var(--text-dark);font-size:1.5em;cursor:pointer;}
+.bubble{padding:14px 18px;border-radius:14px;line-height:1.5;white-space:pre-wrap;}
+.ai .bubble{background:var(--bubble-ai);border-left:3px solid var(--accent);}
+.user .bubble{background:var(--bubble-user);}
+.chat-input{display:flex;gap:8px;padding:14px;background:rgba(20,20,20,0.5);backdrop-filter:blur(10px);}
+.chat-input input{flex:1;padding:12px;border-radius:10px;border:none;outline:none;background:rgba(255,255,255,0.08);color:var(--text);}
+.send-btn{padding:12px 20px;border:none;border-radius:10px;background:var(--accent);color:white;font-family:'Orbitron';cursor:pointer;}
+/* Sidebar lịch sử */
+#historySidebar{position:fixed;top:0;left:-300px;width:280px;height:100%;background:rgba(20,20,25,0.95);color:var(--text);transition:.4s;overflow-y:auto;padding:20px;}
+#historySidebar.show{left:0;}
+#historySidebar h2{font-family:'Orbitron';font-size:1em;margin-bottom:10px;}
+.session-item{padding:10px;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.2s;}
+.session-item:hover{background:rgba(255,255,255,0.1);}
+#infoModal{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:.3s;}
+#infoModal.show{opacity:1;pointer-events:auto;}
+#infoModal .modal{background:var(--modal-bg);padding:20px 30px;border-radius:16px;text-align:center;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 </style>
 </head>
 <body>
 
-<div id="splashScreen">
-  <div class="ai-spinner">
-    <div class="spinner"></div>
-    <span>Đang tải mô hình Gemini...</span>
-  </div>
-</div>
-
 <header>
-  🤖 TTK AI <span>Dev by Trần Tuấn Khang</span>
+  <h1>🤖 TTK AI Chat</h1>
   <div>
-    <button class="mode-toggle" id="modeToggle">🌓</button>
-    <button class="info-btn" id="infoBtn">ℹ️</button>
+    <button id="historyBtn">☰</button>
+    <button id="modeToggle">🌓</button>
+    <button id="infoBtn">ℹ️</button>
   </div>
 </header>
+
 <div id="messages"></div>
+
 <div class="chat-input">
-  <button class="icon-btn" id="imgBtn">🖼️</button>
-  <button class="icon-btn" id="generateImgBtn">🎨</button> 
-  <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
-  <input type="text" id="input" placeholder="Nhập tin nhắn, /taoanh, hoặc gửi ảnh...">
-  <button id="send" class="send-btn">Gửi</button>
+  <input id="userInput" placeholder="Nhập tin nhắn hoặc lệnh /image...">
+  <button id="sendBtn" class="send-btn">Gửi</button>
 </div>
 
+<!-- Sidebar Lịch sử -->
+<aside id="historySidebar">
+  <h2>Lịch sử hội thoại</h2>
+  <button id="newChatBtn" class="send-btn" style="width:100%;margin-bottom:10px;">Bắt đầu mới</button>
+  <div id="sessionList"></div>
+</aside>
+
+<!-- Info Modal -->
 <div id="infoModal">
-  <div class="modal-content">
-    <button class="close-btn" id="closeModal">&times;</button>
-    <h2>TTK AI V2.0</h2>
-    <p><strong>Mô hình Chat:</strong> Gemini 2.5 Flash (Streaming) / Ảnh: Imagen 3.0</p>
-    <p><strong>Developer:</strong> Trần Tuấn Khang</p>
+  <div class="modal">
+    <h3>TTK AI Chat</h3>
+    <p>Mô hình Chat: Gemini 2.5 Flash (Streaming)</p>
+    <p>Mô hình Ảnh: Imagen 3.0</p>
+    <button id="closeInfo" class="send-btn" style="margin-top:10px;">Đóng</button>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
-// === Splash Screen Logic ===
-window.addEventListener("load", ()=>{
-  const splash=document.getElementById("splashScreen");
-  setTimeout(()=>{
-    splash.classList.add("hidden");
-    setTimeout(()=>{
-      splash.style.display="none";
-      addMessage("Xin chào 👋! Mình là **TTK AI** (đã nâng cấp). Giờ mình hỗ trợ streaming, lịch sử chat, phân tích ảnh sâu và tạo ảnh. Thử `/taoanh` nhé!","ai");
-    },800);
-  },1500); // Giảm thời gian load
-});
+/* === Config === */
+const API_KEY = "YOUR_GEMINI_API_KEY";
+const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${API_KEY}`;
+const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${API_KEY}`;
+const SYSTEM_INSTRUCTION_VISION = "Bạn là chuyên gia phân tích thị giác AI. Hãy phân tích hình ảnh chi tiết, có chiều sâu, sử dụng Markdown.";
 
-// === CẤU HÌNH API VÀ BIẾN TOÀN CỤC ===
-
-// !!! VUI LÒNG THAY KEY CỦA BẠN VÀO ĐÂY !!!
-const API_KEY="AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU"; // Thay bằng API Key của bạn
-const MODEL="gemini-2.5-flash"; // Hoặc gemini-pro
-
-// Yêu cầu 1: Chỉ thị Hệ thống Nâng cao cho Vision
-const SYSTEM_INSTRUCTION_VISION = "Bạn là một chuyên gia phân tích thị giác AI. Khi nhận được hình ảnh, hãy phân tích nó một cách siêu chi tiết, cấu trúc, và chuyên nghiệp. Bắt đầu bằng việc mô tả khách quan (Màu sắc, bố cục, đối tượng chính), sau đó đi sâu vào ngữ cảnh, ý nghĩa, và mối liên hệ với các yếuA tố văn hóa/khoa học/kỹ thuật liên quan. Phản hồi phải chuẩn xác, có chiều sâu, và chia thành các đoạn văn rõ ràng.";
-
-// Yêu cầu 2: Endpoint cho Streaming (sử dụng alt=sse để dễ parse)
-const STREAM_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContentStream?key=${API_KEY}&alt=sse`;
-
-// Yêu cầu 4: Endpoint cho Tạo ảnh
-const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${API_KEY}`; // Giả định
-
-// Yêu cầu 3: Lịch sử Hội thoại
+/* === Global Variables === */
 let chatHistory = [];
+let allSessions = JSON.parse(localStorage.getItem("allSessions")) || {};
+let currentSessionId = Date.now().toString();
 
-let selectedImages = []; // Dùng để lưu ảnh Base64 đã chọn
-
-// === DOM Elements ===
+/* === UI Elements === */
 const messagesDiv = document.getElementById("messages");
-const input = document.getElementById("input");
-const sendBtn = document.getElementById("send");
-const modeToggle = document.getElementById("modeToggle");
-const imgBtn = document.getElementById("imgBtn");
-const fileInput = document.getElementById("fileInput");
-const generateImgBtn = document.getElementById("generateImgBtn"); // Nút mới
-const infoBtn = document.getElementById("infoBtn");
-const infoModal = document.getElementById("infoModal");
-const closeModal = document.getElementById("closeModal");
+const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const sidebar = document.getElementById("historySidebar");
+const historyBtn = document.getElementById("historyBtn");
+const sessionList = document.getElementById("sessionList");
+const newChatBtn = document.getElementById("newChatBtn");
 
-// Yêu cầu 6: Xóa logic 'mousemove' và 'renderMessageContent' cũ
-// (Đã xóa)
-
-// === HÀM HIỂN THỊ TIN NHẮN (NÂNG CẤP) ===
-
-/**
- * Thêm tin nhắn vào giao diện chat.
- * Hỗ trợ Markdown và tô sáng cú pháp cho AI.
- * Hỗ trợ hiển thị ảnh.
- */
-function addMessage(text, sender, isTyping = false, images = []) {
-  const msg = document.createElement("div");
-  msg.className = `message ${sender}`;
-  
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  msg.appendChild(avatar);
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-
-  // Hiển thị ảnh (nếu có)
-  images.forEach(src => {
-    const img = document.createElement("img");
-    img.src = src;
-    img.className = "image-preview";
-    // Xóa chức năng click-để-xóa cũ, vì ảnh giờ là 1 phần của tin nhắn đã gửi
-    bubble.appendChild(img);
+/* === Helper === */
+function saveCurrentSession(){
+  allSessions[currentSessionId] = {
+    sessionId: currentSessionId,
+    title: chatHistory[0]?.parts?.[0]?.text?.slice(0,50) || "Phiên mới",
+    messages: chatHistory
+  };
+  localStorage.setItem("allSessions", JSON.stringify(allSessions));
+}
+function loadSession(id){
+  currentSessionId = id;
+  chatHistory = allSessions[id].messages || [];
+  messagesDiv.innerHTML = "";
+  chatHistory.forEach(msg=>{
+    addMessage(msg.parts[0].text, msg.role);
   });
+}
+function renderSessions(){
+  sessionList.innerHTML = "";
+  Object.values(allSessions).reverse().forEach(s=>{
+    const div=document.createElement("div");
+    div.className="session-item";
+    div.textContent=s.title;
+    div.onclick=()=>{loadSession(s.sessionId);toggleSidebar(false);};
+    sessionList.appendChild(div);
+  });
+}
+function startNewChat(){
+  chatHistory=[]; messagesDiv.innerHTML="";
+  currentSessionId = Date.now().toString();
+}
 
-  const textContainer = document.createElement("div");
-  
-  if (isTyping && sender === "ai") {
-    // Spinner logic
-    const spinnerDiv = document.createElement("div");
-    spinnerDiv.className = "ai-spinner";
-    const spinnerCircle = document.createElement("div");
-    spinnerCircle.className = "spinner";
-    const spanText = document.createElement("span");
-    spanText.textContent = "Đang xử lý...";
-    spinnerDiv.appendChild(spinnerCircle);
-    spinnerDiv.appendChild(spanText);
-    bubble.appendChild(spinnerDiv);
-  } else {
-    if (sender === "ai") {
-      // Yêu cầu 5: AI render Markdown + Highlight.js
-      textContainer.innerHTML = marked.parse(text);
-      textContainer.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-      });
-    } else {
-      // User: Hiển thị text thuần (an toàn)
-      textContainer.textContent = text;
-    }
-    bubble.appendChild(textContainer);
-  }
-
+/* === Message Rendering === */
+function addMessage(text, sender){
+  const msg=document.createElement("div");
+  msg.className=`message ${sender}`;
+  const bubble=document.createElement("div");
+  bubble.className="bubble";
+  bubble.innerHTML = marked.parse(text);
   msg.appendChild(bubble);
   messagesDiv.appendChild(msg);
-  setTimeout(() => msg.classList.add("show"), 50); // Animation
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  return msg; // Trả về element tin nhắn để streaming có thể cập nhật
+  return bubble;
 }
 
-// === LOGIC XỬ LÝ ẢNH ===
-
-// Cải tiến: Chỉ thêm ảnh vào mảng, không hiển thị ngay.
-// `sendMessage` sẽ hiển thị ảnh cùng lúc với text.
-function handleFileSelect(files) {
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      selectedImages.push(reader.result);
-      updateImageButton(); // Cập nhật UI nút
-    };
-    reader.readAsDataURL(file);
+/* === Streaming Response === */
+async function streamChatResponse(prompt){
+  const aiBubble = addMessage("...", "ai");
+  const body = JSON.stringify({
+    contents:[...chatHistory, {role:"user", parts:[{text:prompt}]}]
   });
-}
 
-imgBtn.onclick = () => fileInput.click();
-fileInput.onchange = (e) => handleFileSelect(e.target.files);
-
-document.addEventListener("paste", e => {
-  const files = [];
-  for (let i = 0; i < e.clipboardData.items.length; i++) {
-    if (e.clipboardData.items[i].type.indexOf("image") !== -1) {
-      files.push(e.clipboardData.items[i].getAsFile());
-    }
-  }
-  if (files.length > 0) {
-    handleFileSelect(files);
-  }
-});
-
-// Helpers cho UI nút ảnh
-function updateImageButton() {
-  imgBtn.style.filter = `grayscale(0) drop-shadow(0 0 5px var(--accent))`;
-  imgBtn.textContent = `🖼️ ${selectedImages.length}`;
-}
-function clearImageButton() {
-  imgBtn.style.filter = "";
-  imgBtn.textContent = "🖼️";
-}
-
-// === HÀM GỬI TIN NHẮN (NÂNG CẤP LỚN) ===
-
-async function sendMessage() {
-  const text = input.value.trim();
-  const images = [...selectedImages]; // Sao chép mảng ảnh
-  
-  if (!text && images.length === 0) return;
-
-  // Hiển thị tin nhắn của user (kết hợp text và ảnh)
-  addMessage(text, "user", false, images);
-  
-  // Yêu cầu 3: Thêm vào Lịch sử Chat
-  const userParts = [];
-  images.forEach(img => {
-    // Tách phần base64 data
-    userParts.push({ inline_data: { mime_type: "image/jpeg", data: img.split(",")[1] } });
+  const res = await fetch(GEMINI_STREAM_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body
   });
-  if (text) {
-    userParts.push({ text: text });
-  }
-  chatHistory.push({ role: "user", parts: userParts });
 
-  // Xóa input và ảnh đã chọn
-  input.value = "";
-  selectedImages = [];
-  clearImageButton();
-  fileInput.value = null; // Reset file input
-
-  // Yêu cầu 4: Kiểm tra Lệnh Tạo ảnh
-  const imgGenCommand = /^\/(taoanh|image|imagine)\s+/;
-  if (imgGenCommand.test(text)) {
-    const prompt = text.replace(imgGenCommand, "").trim();
-    await generateImage(prompt); // Gọi hàm tạo ảnh
-    return; // Dừng, không gọi chat
-  }
-
-  // === Yêu cầu 2: Gọi Streaming Chat ===
-  
-  // Tạo bubble AI rỗng để chuẩn bị stream
-  const aiMsgElement = addMessage("", "ai", false); // Không dùng spinner, stream ngay
-  const aiBubble = aiMsgElement.querySelector('.bubble');
-  const textContainer = aiBubble.querySelector('div'); // Tìm text container
-  textContainer.innerHTML = "▌"; // Con trỏ nhấp nháy
-  
-  let accumulatedText = "";
-
-  try {
-    // Chuẩn bị Request Body
-    const requestBody = {
-      contents: chatHistory, // Gửi toàn bộ lịch sử
-      safetySettings: [ // Thêm cài đặt an toàn (nên có)
-        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
-        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
-        { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
-        { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" }
-      ]
-    };
-
-    // Yêu cầu 1: Thêm Chỉ thị Vision nếu có ảnh
-    if (images.length > 0) {
-      requestBody.systemInstruction = {
-        parts: [{ text: SYSTEM_INSTRUCTION_VISION }]
-      };
-    }
-
-    const res = await fetch(STREAM_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error.message || `Lỗi API: ${res.status}`);
-    }
-
-    // Xử lý stream (SSE)
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      buffer += decoder.decode(value, { stream: true });
-      const sseMessages = buffer.split("\n\n");
-      buffer = sseMessages.pop(); // Giữ lại phần chưa hoàn chỉnh (nếu có)
-
-      for (const sseMessage of sseMessages) {
-        if (sseMessage.startsWith("data: ")) {
-          const jsonData = sseMessage.substring(6).trim();
-          try {
-            const data = JSON.parse(jsonData);
-            const textChunk = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (textChunk) {
-              accumulatedText += textChunk;
-              // Yêu cầu 5: Cập nhật UI với Marked.js
-              textContainer.innerHTML = marked.parse(accumulatedText + " ▌");
-              messagesDiv.scrollTop = messagesDiv.scrollHeight; // Cuộn theo
-            }
-          } catch (e) {
-            // Bỏ qua các chunk JSON không hợp lệ (ví dụ: chunk rỗng)
-          }
-        }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer="";
+  aiBubble.innerHTML="";
+  while(true){
+    const {done,value}=await reader.read();
+    if(done) break;
+    buffer += decoder.decode(value,{stream:true});
+    const lines = buffer.split("\n");
+    for(const line of lines){
+      if(line.startsWith("data: ")){
+        const json=line.slice(6);
+        if(json.trim()==="") continue;
+        try{
+          const obj=JSON.parse(json);
+          const token=obj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          aiBubble.innerHTML += token.replace(/\n/g,"<br>");
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }catch{}
       }
     }
-    
-    // Hoàn tất stream
-    textContainer.innerHTML = marked.parse(accumulatedText); // Bỏ con trỏ
-    // Yêu cầu 5: Tô sáng cú pháp sau khi hoàn tất
-    textContainer.querySelectorAll('pre code').forEach((block) => {
-      hljs.highlightElement(block);
-    });
-
-    // Yêu cầu 3: Thêm phản hồi AI vào lịch sử
-    chatHistory.push({ role: "model", parts: [{ text: accumulatedText }] });
-
-  } catch (err) {
-    textContainer.innerHTML = `❌ Lỗi: ${err.message}`;
-    // Không thêm lỗi vào lịch sử chat
   }
+  chatHistory.push({role:"user",parts:[{text:prompt}]});
+  chatHistory.push({role:"model",parts:[{text:aiBubble.textContent}]});
+  saveCurrentSession();
 }
 
-// === Yêu cầu 4: HÀM TẠO ẢNH ===
+/* === Image Generation === */
+async function generateImage(prompt){
+  addMessage(`🎨 Tạo ảnh cho: "${prompt}"`,"user");
+  const aiBubble = addMessage("Đang tạo ảnh...","ai");
+  const res = await fetch(IMAGE_ENDPOINT,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({prompt})
+  });
+  const data = await res.json();
+  const base64 = data?.images?.[0]?.data;
+  if(base64){
+    aiBubble.innerHTML = `<img src="data:image/png;base64,${base64}" style="max-width:100%;border-radius:10px;">`;
+  } else aiBubble.innerHTML = "⚠️ Không tạo được ảnh.";
+}
 
-async function generateImage(prompt) {
-  if (!prompt) {
-    addMessage("Vui lòng nhập mô tả (prompt) sau lệnh /taoanh.", "ai");
+/* === Chat Logic === */
+async function handleSend(){
+  const text=input.value.trim();
+  if(!text) return;
+  input.value="";
+  if(text.startsWith("/taoanh")||text.startsWith("/image")||text.startsWith("/imagine")){
+    const prompt=text.split(" ").slice(1).join(" ");
+    generateImage(prompt);
     return;
   }
-  
-  const aiMsg = addMessage("", "ai", true); // Hiển thị spinner
-  
-  try {
-    const res = await fetch(IMAGE_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ "prompt": prompt })
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error.message || `Lỗi API: ${res.status}`);
-    }
-
-    const data = await res.json();
-    const b64Json = data?.images?.[0]?.imageB64;
-
-    if (b64Json) {
-      aiMsg.remove(); // Xóa spinner
-      const imgSrc = `data:image/png;base64,${b64Json}`;
-      // Hiển thị ảnh
-      addMessage(`Ảnh của bạn với prompt: "${prompt}"`, "ai", false, [imgSrc]);
-      
-      // Thêm vào lịch sử (phần này tùy chọn, nhưng tốt cho ngữ cảnh)
-      chatHistory.push({ 
-        role: "model", 
-        parts: [
-          { text: `Đây là ảnh tôi tạo cho bạn: "${prompt}"` },
-          { inline_data: { mime_type: "image/png", data: b64Json } }
-        ]
-      });
-    } else {
-      throw new Error("Không nhận được dữ liệu ảnh B64.");
-    }
-
-  } catch (err) {
-    aiMsg.remove();
-    addMessage(`❌ Lỗi tạo ảnh: ${err.message}`, "ai");
-  }
+  await streamChatResponse(text);
 }
 
-// === Event Listeners ===
-sendBtn.onclick = sendMessage;
-input.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
-modeToggle.onclick = () => document.body.classList.toggle("light");
+/* === Events === */
+sendBtn.onclick=handleSend;
+input.addEventListener("keypress",e=>{if(e.key==="Enter")handleSend();});
+historyBtn.onclick=()=>toggleSidebar();
+newChatBtn.onclick=startNewChat;
 
-// Nút Tạo ảnh
-generateImgBtn.onclick = () => {
-  input.value = "/taoanh ";
-  input.focus();
-};
+/* === Sidebar Toggle === */
+function toggleSidebar(force){
+  sidebar.classList.toggle("show",force);
+  renderSessions();
+}
 
-// Info Modal Logic
-infoBtn.onclick = () => infoModal.classList.add("show");
-closeModal.onclick = () => infoModal.classList.remove("show");
-window.onclick = e => { if (e.target === infoModal) infoModal.classList.remove("show"); };
+/* === Info Modal === */
+const infoModal=document.getElementById("infoModal");
+document.getElementById("infoBtn").onclick=()=>infoModal.classList.add("show");
+document.getElementById("closeInfo").onclick=()=>infoModal.classList.remove("show");
 
+/* === Init === */
+renderSessions();
+addMessage("Xin chào! 👋 Đây là **TTK AI Chat** (Gemini 2.5 + Imagen 3.0). Hãy bắt đầu trò chuyện!","ai");
 </script>
 </body>
 </html>
