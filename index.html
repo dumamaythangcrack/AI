@@ -412,7 +412,7 @@ body.light .icon-btn:disabled { background: none; }
 const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
 
 // Model và Endpoints
-const MODEL = "gemini-1.5-flash"; // Sử dụng model 1.5 Flash mới nhất
+const MODEL = "gemini-1.5-pro-latest"; // Sử dụng model 1.5 Flash mới nhất
 // Endpoint cho streaming (đáp ứng yêu cầu streaming token-by-token)
 const STREAM_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${API_KEY}&alt=sse`;
 // Endpoint tạo ảnh (Theo yêu cầu)
@@ -1034,4 +1034,5 @@ window.onclick = e => {
 </script>
 </body>
 </html>
+
 
