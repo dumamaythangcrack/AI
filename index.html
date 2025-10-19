@@ -412,9 +412,9 @@ body.light .icon-btn:disabled { background: none; }
 const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
 
 // Model và Endpoints
-const MODEL = "gemini-1.5-pro-latest"; // Sử dụng model 1.5 Flash mới nhất
+const MODEL = "gemini-pro"; // Sử dụng model 1.5 Flash mới nhất
 // Endpoint cho streaming (đáp ứng yêu cầu streaming token-by-token)
-const STREAM_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${API_KEY}&alt=sse`;
+const CHAT_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
 // Endpoint tạo ảnh (Theo yêu cầu)
 const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${API_KEY}`;
 
@@ -618,17 +618,25 @@ async function sendMessage() {
   // Vô hiệu hóa input (Yêu cầu 4)
   toggleInputActive(false);
   
-  // Xác định chế độ tạo ảnh (Yêu cầu 3)
-  const isImageGen = text.startsWith('/taoanh') || text.startsWith('/image') || text.startsWith('/imagine');
-  let prompt = text;
-  if (isImageGen) {
-    prompt = text.replace(/\/taoanh|\/image|\/imagine/, '').trim();
-    if (!prompt) {
-      addMessage("Vui lòng nhập mô tả cho ảnh sau lệnh /taoanh.", "ai");
-      toggleInputActive(true);
-      return;
-    }
+ // Xác định chế độ tạo ảnh (Yêu cầu 3)
+const isImageGen = text.startsWith('/taoanh') || text.startsWith('/image') || text.startsWith('/imagine');
+let prompt = text;
+if (isImageGen) {
+  prompt = text.replace(/\/taoanh|\/image|\/imagine/, '').trim();
+  if (!prompt) {
+    addMessage("Vui lòng nhập mô tả cho ảnh sau lệnh /taoanh.", "ai");
+    toggleInputActive(true);
+    return;
   }
+}
+
+// ...bên trong hàm sendMessage()...
+if (isImageGen) {
+  await handleImageGeneration(prompt, aiMsgBubble);
+} else {
+  // Đổi tên hàm ở đây
+  await handleChat(aiMsgBubble);
+}
 
   // 1. Chuẩn bị `parts` cho tin nhắn người dùng
   const userParts = [];
@@ -669,7 +677,7 @@ async function sendMessage() {
       await handleImageGeneration(prompt, aiMsgBubble);
     } else {
       // Chế độ chat/vision (Yêu cầu 2)
-      await handleChatStream(aiMsgBubble);
+      await (aiMsgBubble);
     }
   } catch (err) {
     // Xử lý lỗi chung (Yêu cầu 2)
@@ -729,14 +737,10 @@ async function handleImageGeneration(prompt, bubbleEl) {
 }
 
 /**
- * Xử lý gọi API chat streaming (Yêu cầu 2)
+ * Xử lý gọi API chat KHÔNG STREAMING (Dùng cho gemini-pro-vision)
  * @param {HTMLElement} bubbleEl - Bubble của AI để cập nhật
  */
-async function handleChatStream(bubbleEl) {
-  let fullResponse = "";
-  let buffer = "";
-  const decoder = new TextDecoder();
-  
+async function handleChat(bubbleEl) {
   // Chuẩn bị payload
   const payload = {
     contents: chatHistory,
@@ -746,73 +750,33 @@ async function handleChatStream(bubbleEl) {
       topP: 1,
       maxOutputTokens: 2048,
     },
-    // Thêm chỉ thị hệ thống nếu có ảnh (Yêu cầu 3)
+    // Thêm chỉ thị hệ thống nếu có ảnh
     ...(chatHistory[chatHistory.length - 1].parts.some(p => p.inline_data) && {
       systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION_VISION }] }
     })
   };
-  
-  const res = await fetch(STREAM_ENDPOINT, {
+
+  // Đổi CHAT_ENDPOINT
+  const res = await fetch(CHAT_ENDPOINT, { 
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  
+
   if (!res.ok) {
     const errorData = await res.json();
     throw new Error(errorData.error?.message || `Lỗi HTTP ${res.status}`);
   }
 
-  // Xử lý stream SSE
-  const reader = res.body.getReader();
-  bubbleEl.innerHTML = ""; // Xóa spinner để bắt đầu stream
-  
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop(); // Giữ lại dòng cuối (có thể chưa hoàn chỉnh)
-    
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        try {
-          const jsonString = line.substring(6);
-          const parsed = JSON.parse(jsonString);
-          const textChunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-          
-          if (textChunk) {
-            fullResponse += textChunk;
-            // Render Markdown + con trỏ "▌" (Yêu cầu 4 - Marked.js)
-            bubbleEl.innerHTML = marked.parse(fullResponse + ' ▌'); 
-            // Tối ưu hóa cuộn (Yêu cầu 4)
-            scrollToBottom(false);
-          }
-        } catch (e) {
-          // Bỏ qua lỗi parse JSON (do chunk không hoàn chỉnh)
-          // console.warn("Lỗi parse SSE chunk:", e.message, line);
-        }
-      }
-    }
-  }
-  
-  // Xử lý buffer còn lại (nếu có)
-  if (buffer.startsWith('data: ')) {
-     try {
-        const jsonString = buffer.substring(6);
-        const parsed = JSON.parse(jsonString);
-        const textChunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (textChunk) fullResponse += textChunk;
-     } catch (e) {}
-  }
+  const data = await res.json();
+  const fullResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi.";
 
-  // Render hoàn chỉnh và tô sáng code (Yêu cầu 4)
+  // Render hoàn chỉnh và tô sáng code
   bubbleEl.innerHTML = marked.parse(fullResponse);
   bubbleEl.querySelectorAll('pre code').forEach((block) => {
     hljs.highlightElement(block);
   });
-  
+
   // Lưu vào lịch sử
   chatHistory.push({
     role: "model",
@@ -1034,5 +998,6 @@ window.onclick = e => {
 </script>
 </body>
 </html>
+
 
 
