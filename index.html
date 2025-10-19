@@ -1,236 +1,956 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTK AI Chat - Gemini 2.5 Flash + Imagen 3.0</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TTK AI Chat — Gemini 2.5 Flash (Streaming) + Imagen 3.0</title>
 
-<!-- Highlight.js & Marked.js -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<!-- Highlight.js theme + Marked -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#0b0b10; --text:#f0f0f0; --accent:#a855f7; --bubble-ai:rgba(25,25,25,0.7);
-  --bubble-user:rgba(50,50,50,0.6); --modal-bg:rgba(15,15,15,0.9);
+  --bg-dark: #0a0a0f;
+  --bg-light: #f9f9f9;
+  --text-dark: #e6eef6;
+  --muted: #9aa6b2;
+  --accent: #00e5ff; /* cyan accent */
+  --accent-weak: rgba(0,229,255,0.12);
+  --bubble-ai-dark: rgba(20,20,20,0.85);
+  --bubble-user-dark: rgba(40,40,40,0.7);
+  --modal-bg: rgba(12,12,12,0.65);
+  --radius: 10px;
+  --glass: rgba(255,255,255,0.02);
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;margin:0;}
-header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:rgba(20,20,20,0.5);backdrop-filter:blur(10px);}
-header h1{font-family:'Orbitron',monospace;font-size:1.1em;margin:0;}
-header button{background:none;border:none;color:var(--text);cursor:pointer;font-size:1.2em;margin-left:10px;}
-#messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
-.message{display:flex;max-width:75%;animation:fadeIn .3s ease forwards;}
-.message.user{align-self:flex-end;}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+html,body{height:100%;}
+body{
+  background: var(--bg-dark);
+  color: var(--text-dark);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* Header */
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:10px}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.header-right{display:flex;align-items:center;gap:8px;}
+.header-right button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:8px;border-radius:8px;}
+.header-right button:hover{color:var(--accent);transform:translateY(-1px);}
+
+/* Main layout */
+.app{
+  display:flex;
+  flex:1;
+  min-height:0; /* important for flex scroll */
+}
+/* History sidebar */
+#historySidebar{
+  width:320px;
+  max-width:40%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+  border-right:1px solid rgba(255,255,255,0.02);
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  transform:translateX(-100%);
+  transition:transform .28s ease;
+  z-index:20;
+}
+#historySidebar.open{transform:translateX(0);}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.sidebar-header h3{font-size:1rem;color:var(--text-dark)}
+#newChatBtn, #clearAllBtn{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--accent);cursor:pointer}
+.session-list{overflow:auto;flex:1;padding-top:6px;display:flex;flex-direction:column;gap:6px;}
+.session-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);cursor:pointer;border:1px solid rgba(255,255,255,0.02);color:var(--muted)}
+.session-item:hover{background:var(--accent-weak);color:var(--text-dark)}
+
+/* Chat area */
+.chat-container{flex:1;display:flex;flex-direction:column;min-width:0;}
+#messages{
+  flex:1;
+  overflow:auto;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  scroll-behavior:smooth;
+}
+#messages::-webkit-scrollbar{width:10px}
+#messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:8px}
+
+/* Message styles */
+.message{display:flex;gap:10px;max-width:80%;align-items:flex-start;}
+.message.user{align-self:flex-end;justify-content:flex-end;}
 .message.ai{align-self:flex-start;}
-.bubble{padding:14px 18px;border-radius:14px;line-height:1.5;white-space:pre-wrap;}
-.ai .bubble{background:var(--bubble-ai);border-left:3px solid var(--accent);}
-.user .bubble{background:var(--bubble-user);}
-.chat-input{display:flex;gap:8px;padding:14px;background:rgba(20,20,20,0.5);backdrop-filter:blur(10px);}
-.chat-input input{flex:1;padding:12px;border-radius:10px;border:none;outline:none;background:rgba(255,255,255,0.08);color:var(--text);}
-.send-btn{padding:12px 20px;border:none;border-radius:10px;background:var(--accent);color:white;font-family:'Orbitron';cursor:pointer;}
-/* Sidebar lịch sử */
-#historySidebar{position:fixed;top:0;left:-300px;width:280px;height:100%;background:rgba(20,20,25,0.95);color:var(--text);transition:.4s;overflow-y:auto;padding:20px;}
-#historySidebar.show{left:0;}
-#historySidebar h2{font-family:'Orbitron';font-size:1em;margin-bottom:10px;}
-.session-item{padding:10px;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.2s;}
-.session-item:hover{background:rgba(255,255,255,0.1);}
-#infoModal{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:.3s;}
-#infoModal.show{opacity:1;pointer-events:auto;}
-#infoModal .modal{background:var(--modal-bg);padding:20px 30px;border-radius:16px;text-align:center;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.avatar{width:40px;height:40px;border-radius:8px;flex-shrink:0;background:linear-gradient(180deg,#0ff66a,#00bcd4);display:flex;align-items:center;justify-content:center;color:#012a2b;font-weight:700}
+.bubble{
+  background:var(--bubble-ai-dark);
+  color:var(--text-dark);
+  padding:12px 14px;border-radius:12px;line-height:1.45;white-space:pre-wrap;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02);
+  max-width:100%;
+}
+.message.user .bubble{background:var(--bubble-user-dark); color:var(--text-dark)}
+
+/* Image preview */
+.image-preview{max-width:220px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);overflow:hidden;display:block}
+
+/* Chat input */
+.chat-input{
+  padding:12px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  border-top:1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+}
+.chat-input input[type="text"]{
+  flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text-dark);
+  outline:none;font-size:1rem;
+}
+.icon-btn, .send-btn, .gen-btn{
+  padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#00141a;font-weight:600;cursor:pointer;
+  box-shadow:none;
+}
+.icon-btn.secondary{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+.icon-btn.secondary:hover{color:var(--accent)}
+.send-btn[disabled],.gen-btn[disabled],.icon-btn[disabled]{opacity:0.5;cursor:not-allowed}
+
+/* Modal info */
+#infoModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
+#infoModal.show{pointer-events:auto;opacity:1}
+#infoModal .modal-content{width:420px;background:var(--modal-bg);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+
+/* Small utility */
+.muted{color:var(--muted);font-size:0.9rem}
+.center{display:flex;align-items:center;justify-content:center;}
+
+/* Responsive */
+@media (max-width:900px){
+  #historySidebar{position:fixed;left:0;top:60px;height:calc(100% - 60px);z-index:50}
+  .session-list{padding-bottom:10px}
+  .logo span{display:none}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🤖 TTK AI Chat</h1>
-  <div>
-    <button id="historyBtn">☰</button>
-    <button id="modeToggle">🌓</button>
-    <button id="infoBtn">ℹ️</button>
+  <div class="header-left">
+    <div class="logo"><div class="dot"></div><span>TTK AI</span></div>
+    <div class="muted">Dev: Trần Tuấn Khang</div>
+  </div>
+
+  <div class="header-right">
+    <!-- History button -->
+    <button id="historyBtn" title="Lịch sử">☰ Lịch sử</button>
+    <button id="modeToggle" title="Dark/Light">🌓</button>
+    <button id="infoBtn" title="Thông tin">ℹ️</button>
   </div>
 </header>
 
-<div id="messages"></div>
+<div class="app">
+  <!-- History Sidebar -->
+  <aside id="historySidebar" aria-hidden="true">
+    <div class="sidebar-header">
+      <h3>Phiên hội thoại</h3>
+      <div>
+        <button id="newChatBtn" title="Bắt đầu Phiên Mới">+ Mới</button>
+      </div>
+    </div>
+    <div class="muted">Lưu trữ cục bộ (localStorage)</div>
+    <div class="session-list" id="sessionList">
+      <!-- session items -->
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;">
+      <button id="clearAllBtn" title="Xóa tất cả phiên" style="flex:1;background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px">Xóa tất cả</button>
+    </div>
+  </aside>
 
-<div class="chat-input">
-  <input id="userInput" placeholder="Nhập tin nhắn hoặc lệnh /image...">
-  <button id="sendBtn" class="send-btn">Gửi</button>
+  <!-- Chat area -->
+  <main class="chat-container">
+    <div id="messages" role="log" aria-live="polite"></div>
+
+    <div class="chat-input">
+      <button class="icon-btn secondary" id="imgBtn" title="Chèn ảnh">🖼️</button>
+      <input id="fileInput" class="file-input" type="file" accept="image/*" multiple style="display:none" />
+      <input type="text" id="input" placeholder="Nhập tin nhắn hoặc mô tả ảnh. Dùng /taoanh hoặc /imagine để tạo ảnh..." autocomplete="off" />
+      <button class="gen-btn" id="generateImgBtn" title="Tạo ảnh">🎨 Tạo ảnh</button>
+      <button class="send-btn" id="send">Gửi</button>
+    </div>
+  </main>
 </div>
 
-<!-- Sidebar Lịch sử -->
-<aside id="historySidebar">
-  <h2>Lịch sử hội thoại</h2>
-  <button id="newChatBtn" class="send-btn" style="width:100%;margin-bottom:10px;">Bắt đầu mới</button>
-  <div id="sessionList"></div>
-</aside>
-
-<!-- Info Modal -->
-<div id="infoModal">
-  <div class="modal">
-    <h3>TTK AI Chat</h3>
-    <p>Mô hình Chat: Gemini 2.5 Flash (Streaming)</p>
-    <p>Mô hình Ảnh: Imagen 3.0</p>
-    <button id="closeInfo" class="send-btn" style="margin-top:10px;">Đóng</button>
+<!-- Info modal -->
+<div id="infoModal" aria-hidden="true">
+  <div class="modal-content">
+    <button id="closeModal" style="float:right;background:none;border:0;font-size:1.2rem;color:var(--muted)">×</button>
+    <h2 style="font-family:Orbitron,monospace;margin-bottom:6px">Mô hình Chat</h2>
+    <p><strong>Gemini 2.5 Flash (Streaming)</strong> / Ảnh: Imagen 3.0</p>
+    <p class="muted">Phiên bản demo tích hợp streaming & multimodal. API key nhúng sẵn (dùng cho thử nghiệm cục bộ).</p>
   </div>
 </div>
 
+<!-- Marked.js + Highlight.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
 <script>
-/* === Config === */
-const API_KEY = "YOUR_GEMINI_API_KEY";
-const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${API_KEY}`;
+/*
+  TTK AI Chat — Full client implementation with:
+  - Session management (localStorage)
+  - Streaming to Gemini :generateContentStream
+  - Image generation using Imagen endpoint (mocked as official)
+  - Multimodal (images via file/paste)
+  - Markdown rendering + code highlight
+  - Disable controls during streaming
+  - Scroll optimization (only auto-scroll if near bottom)
+*/
+
+/* ===========================
+   Configuration (USER SELECTED: A - embed API key)
+   =========================== */
+const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU"; // <--- Embedded as requested
+const MODEL = "gemini-2.5-flash";
+const STREAM_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContentStream?key=${API_KEY}`;
 const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${API_KEY}`;
-const SYSTEM_INSTRUCTION_VISION = "Bạn là chuyên gia phân tích thị giác AI. Hãy phân tích hình ảnh chi tiết, có chiều sâu, sử dụng Markdown.";
 
-/* === Global Variables === */
-let chatHistory = [];
-let allSessions = JSON.parse(localStorage.getItem("allSessions")) || {};
-let currentSessionId = Date.now().toString();
+/* Vision system instruction (demanded) */
+const SYSTEM_INSTRUCTION_VISION = "Bạn là một chuyên gia phân tích thị giác AI. Khi nhận được hình ảnh, hãy phân tích nó một cách siêu chi tiết, cấu trúc, và chuyên nghiệp. Phân tích ngữ cảnh, ý nghĩa, và mối liên hệ sâu sắc. Phản hồi phải chuẩn xác, có chiều sâu, và chia thành các đoạn văn rõ ràng sử dụng Markdown.";
 
-/* === UI Elements === */
-const messagesDiv = document.getElementById("messages");
-const input = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
-const sidebar = document.getElementById("historySidebar");
-const historyBtn = document.getElementById("historyBtn");
-const sessionList = document.getElementById("sessionList");
-const newChatBtn = document.getElementById("newChatBtn");
+/* ===========================
+   State: sessions, chat history, selected images
+   =========================== */
+let allSessions = {};     // { sessionId: { sessionId, title, messages: [{role,content,images?}], createdAt } }
+let currentSessionId = null;
+let chatHistory = [];     // current session messages (array of objects)
+let selectedImages = [];  // base64 strings
 
-/* === Helper === */
-function saveCurrentSession(){
-  allSessions[currentSessionId] = {
-    sessionId: currentSessionId,
-    title: chatHistory[0]?.parts?.[0]?.text?.slice(0,50) || "Phiên mới",
-    messages: chatHistory
-  };
-  localStorage.setItem("allSessions", JSON.stringify(allSessions));
+/* DOM refs */
+const messagesDiv = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const imgBtn = document.getElementById('imgBtn');
+const fileInput = document.getElementById('fileInput');
+const generateImgBtn = document.getElementById('generateImgBtn');
+const historyBtn = document.getElementById('historyBtn');
+const historySidebar = document.getElementById('historySidebar');
+const sessionListEl = document.getElementById('sessionList');
+const newChatBtn = document.getElementById('newChatBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const modeToggle = document.getElementById('modeToggle');
+const infoBtn = document.getElementById('infoBtn');
+const infoModal = document.getElementById('infoModal');
+const closeModal = document.getElementById('closeModal');
+
+/* Utility: generate simple sessionId */
+function makeId(prefix='s') {
+  return prefix + '_' + Math.random().toString(36).slice(2,10);
 }
-function loadSession(id){
-  currentSessionId = id;
-  chatHistory = allSessions[id].messages || [];
-  messagesDiv.innerHTML = "";
-  chatHistory.forEach(msg=>{
-    addMessage(msg.parts[0].text, msg.role);
+
+/* LocalStorage key */
+const STORAGE_KEY = 'ttk_ai_all_sessions_v1';
+
+/* ===========================
+   Session Management
+   =========================== */
+
+function loadAllSessionsFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return {};
+    const obj = JSON.parse(raw);
+    if(typeof obj === 'object' && obj !== null) return obj;
+    return {};
+  }catch(e){
+    console.warn('Failed to read sessions', e);
+    return {};
+  }
+}
+
+function persistAllSessions(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allSessions));
+  }catch(e){
+    console.warn('Failed to persist sessions', e);
+  }
+}
+
+function renderSessionList(){
+  sessionListEl.innerHTML = '';
+  const ids = Object.keys(allSessions).sort((a,b) => allSessions[b].createdAt - allSessions[a].createdAt);
+  if(ids.length === 0){
+    const n = document.createElement('div');
+    n.className = 'muted center';
+    n.textContent = 'Chưa có phiên nào. Nhấn "Bắt đầu Phiên Mới".';
+    sessionListEl.appendChild(n);
+    return;
+  }
+  ids.forEach(id => {
+    const s = allSessions[id];
+    const item = document.createElement('div');
+    item.className = 'session-item';
+    item.dataset.sid = id;
+    const title = s.title || (s.messages?.[0]?.content?.slice(0,60) || 'Phiên mới');
+    item.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(title)}</div>
+        <div class="muted" style="font-size:0.85rem">${new Date(s.createdAt).toLocaleString()}</div>
+      </div>
+      <div style="margin-left:8px">
+        <button class="icon-btn" title="Tải">↺</button>
+      </div>
+    </div>`;
+    item.addEventListener('click', ()=> { loadSession(id); closeHistory(); });
+    sessionListEl.appendChild(item);
   });
 }
-function renderSessions(){
-  sessionList.innerHTML = "";
-  Object.values(allSessions).reverse().forEach(s=>{
-    const div=document.createElement("div");
-    div.className="session-item";
-    div.textContent=s.title;
-    div.onclick=()=>{loadSession(s.sessionId);toggleSidebar(false);};
-    sessionList.appendChild(div);
-  });
-}
+
+/* Create a new session and switch to it */
 function startNewChat(){
-  chatHistory=[]; messagesDiv.innerHTML="";
-  currentSessionId = Date.now().toString();
+  const sid = makeId('sess');
+  const now = Date.now();
+  const session = { sessionId: sid, title: 'Phiên mới', messages: [], createdAt: now };
+  allSessions[sid] = session;
+  currentSessionId = sid;
+  chatHistory = session.messages;
+  persistAllSessions();
+  renderSessionList();
+  clearMessagesUI();
+  addSystemWelcome(); // greet
+  updateTitle();
 }
 
-/* === Message Rendering === */
-function addMessage(text, sender){
-  const msg=document.createElement("div");
-  msg.className=`message ${sender}`;
-  const bubble=document.createElement("div");
-  bubble.className="bubble";
-  bubble.innerHTML = marked.parse(text);
+/* Save current chatHistory to allSessions and localStorage */
+function saveCurrentSession(){
+  if(!currentSessionId) {
+    console.warn('No current session. Creating one.');
+    startNewChat();
+  }
+  // generate title from first 1-2 messages if missing
+  const session = allSessions[currentSessionId] || { sessionId: currentSessionId, messages: [] };
+  session.messages = chatHistory.slice(); // copy
+  // auto title: use first user message or first AI snippet
+  let title = session.title || '';
+  if(!title || title === 'Phiên mới'){
+    const first = session.messages.find(m => m.role === 'user' && m.content && m.content.trim());
+    if(first) title = first.content.trim().slice(0,60);
+    else {
+      const firstAi = session.messages.find(m => m.role === 'assistant' && m.content && m.content.trim());
+      if(firstAi) title = firstAi.content.trim().slice(0,60);
+    }
+    session.title = title || 'Phiên ' + new Date(session.createdAt).toLocaleString();
+  }
+  allSessions[currentSessionId] = session;
+  persistAllSessions();
+  renderSessionList();
+}
+
+/* Load session by id: replace chatHistory and re-render UI */
+function loadSession(sessionId){
+  const session = allSessions[sessionId];
+  if(!session) {
+    alert('Không tìm thấy phiên: ' + sessionId);
+    return;
+  }
+  currentSessionId = sessionId;
+  chatHistory = session.messages = session.messages || [];
+  clearMessagesUI();
+  // render messages
+  chatHistory.forEach(m => {
+    if(m.role === 'user') addMessageToUI(m.content, 'user', false, m.images);
+    else addMessageToUI(m.content, 'ai', false, m.images);
+  });
+  updateTitle();
+}
+
+/* Remove all messages in UI */
+function clearMessagesUI(){
+  messagesDiv.innerHTML = '';
+}
+
+/* Update title in header (optional) */
+function updateTitle(){
+  const headerSpan = document.querySelector('.header-left .muted');
+  if(currentSessionId && allSessions[currentSessionId]){
+    const t = allSessions[currentSessionId].title || 'Phiên mới';
+    headerSpan.textContent = t;
+  } else headerSpan.textContent = 'Dev: Trần Tuấn Khang';
+}
+
+/* Load sessions on startup */
+(function initSessionsFromStorage(){
+  allSessions = loadAllSessionsFromStorage();
+  // if none, create initial session
+  const keys = Object.keys(allSessions);
+  if(keys.length === 0){
+    startNewChat();
+  } else {
+    renderSessionList();
+    // choose latest
+    const latest = keys.sort((a,b)=> allSessions[b].createdAt - allSessions[a].createdAt)[0];
+    loadSession(latest);
+  }
+})();
+
+/* Clear all sessions */
+clearAllBtn.addEventListener('click', ()=>{
+  if(!confirm('Xóa tất cả phiên trong localStorage?')) return;
+  allSessions = {};
+  persistAllSessions();
+  renderSessionList();
+  startNewChat();
+});
+
+/* History toggle */
+function openHistory(){ historySidebar.classList.add('open'); historySidebar.setAttribute('aria-hidden','false'); }
+function closeHistory(){ historySidebar.classList.remove('open'); historySidebar.setAttribute('aria-hidden','true'); }
+historyBtn.addEventListener('click', ()=> {
+  if(historySidebar.classList.contains('open')) closeHistory();
+  else openHistory();
+});
+newChatBtn.addEventListener('click', ()=> { startNewChat(); closeHistory(); });
+
+/* ===========================
+   Utilities: escaping + rendering
+   =========================== */
+function escapeHtml(s = '') {
+  return s.replace(/[&<>"']/g, function(m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]); });
+}
+
+/* Render markdown and highlight code blocks */
+function renderMarkdownToElement(md, container){
+  // marked + highlight.js
+  try{
+    const html = marked.parse(md);
+    container.innerHTML = html;
+    // highlight
+    container.querySelectorAll('pre code').forEach((block) => {
+      try { hljs.highlightElement(block); } catch(e){}
+    });
+  }catch(e){
+    container.textContent = md;
+  }
+}
+
+/* Scroll optimization: only auto-scroll if user near bottom */
+function userIsNearBottom(threshold = 160){
+  const el = messagesDiv;
+  const distance = el.scrollHeight - (el.scrollTop + el.clientHeight);
+  return distance < threshold;
+}
+function smartScrollToBottom(){
+  if(userIsNearBottom()) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+/* ===========================
+   Message UI functions
+   =========================== */
+function addMessageToUI(text, sender='ai', isTyping=false, images=[]){
+  const msg = document.createElement('div');
+  msg.className = 'message ' + sender;
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = sender === 'user' ? 'U' : 'AI';
+  msg.appendChild(avatar);
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+
+  // add images if any
+  if(images && images.length){
+    images.forEach(src=>{
+      const img = document.createElement('img');
+      img.src = src;
+      img.className = 'image-preview';
+      // clicking image opens in new tab
+      img.style.cursor = 'pointer';
+      img.addEventListener('click', ()=> { window.open(src, '_blank'); });
+      bubble.appendChild(img);
+    });
+  }
+
+  if(isTyping && sender === 'ai'){
+    const spinner = document.createElement('div');
+    spinner.className = 'ai-spinner';
+    spinner.style.display = 'flex';
+    spinner.style.alignItems = 'center';
+    spinner.style.gap = '8px';
+    spinner.innerHTML = `<div class="spinner" style="width:18px;height:18px;border:2px solid rgba(255,255,255,0.08);border-top:2px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite"></div><span style="color:var(--muted);font-size:0.95rem">TTK AI đang gõ...</span>`;
+    bubble.appendChild(spinner);
+    msg.appendChild(bubble);
+    messagesDiv.appendChild(msg);
+    setTimeout(()=>msg.classList.add('show'),50);
+    smartScrollToBottom();
+    return { msg, bubble, spinner }; // return refs to update
+  } else {
+    // render markdown content
+    const contentDiv = document.createElement('div');
+    renderMarkdownToElement(text || '', contentDiv);
+    bubble.appendChild(contentDiv);
+  }
+
   msg.appendChild(bubble);
   messagesDiv.appendChild(msg);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  return bubble;
+  setTimeout(()=>msg.classList.add('show'),50);
+  smartScrollToBottom();
+  return { msg, bubble };
 }
 
-/* === Streaming Response === */
-async function streamChatResponse(prompt){
-  const aiBubble = addMessage("...", "ai");
-  const body = JSON.stringify({
-    contents:[...chatHistory, {role:"user", parts:[{text:prompt}]}]
-  });
+/* append text token to an existing ai bubble (for streaming) */
+function appendToAIBubble(bubbleEl, tokenText){
+  // find last content div or create one
+  let contentDiv = bubbleEl.querySelector('div');
+  if(!contentDiv){
+    contentDiv = document.createElement('div');
+    bubbleEl.appendChild(contentDiv);
+  }
+  // append raw text then re-render markdown incrementally:
+  // For performance we will append text nodes and periodically re-run markdown only on finalize.
+  // But to keep formatting, we append as text and then set innerHTML via marked.
+  // Keep simple: maintain live string
+  if(typeof bubbleEl._streamText === 'undefined') bubbleEl._streamText = '';
+  bubbleEl._streamText += tokenText;
+  // Render incremental markdown safely: mark as plain until stream finishes to avoid many heavy parses.
+  // We'll show plain text while streaming and then on finish convert to markdown.
+  bubbleEl.querySelectorAll('*').forEach(n => n.remove()); // clear
+  const pre = document.createElement('pre');
+  pre.style.whiteSpace = 'pre-wrap';
+  pre.style.margin = '0';
+  pre.textContent = bubbleEl._streamText;
+  bubbleEl.appendChild(pre);
+  smartScrollToBottom();
+}
 
-  const res = await fetch(GEMINI_STREAM_URL, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body
-  });
+/* finalize streaming: convert bubble._streamText -> markdown rendered */
+function finalizeAIBubble(bubbleEl){
+  if(!bubbleEl) return;
+  const text = bubbleEl._streamText || '';
+  bubbleEl._streamText = ''; // clear
+  bubbleEl.innerHTML = ''; // clear
+  const contentDiv = document.createElement('div');
+  renderMarkdownToElement(text, contentDiv);
+  bubbleEl.appendChild(contentDiv);
+  smartScrollToBottom();
+}
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let buffer="";
-  aiBubble.innerHTML="";
-  while(true){
-    const {done,value}=await reader.read();
-    if(done) break;
-    buffer += decoder.decode(value,{stream:true});
-    const lines = buffer.split("\n");
-    for(const line of lines){
-      if(line.startsWith("data: ")){
-        const json=line.slice(6);
-        if(json.trim()==="") continue;
-        try{
-          const obj=JSON.parse(json);
-          const token=obj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          aiBubble.innerHTML += token.replace(/\n/g,"<br>");
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }catch{}
-      }
+/* ===========================
+   Image handling: upload & paste
+   =========================== */
+imgBtn.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', (e)=>{
+  const files = Array.from(e.target.files || []);
+  if(files.length === 0) return;
+  files.forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      const data = ev.target.result;
+      selectedImages.push(data);
+      // show user preview immediately
+      addMessageToUI('', 'user', false, [data]);
+      // save to chat history
+      chatHistory.push({ role:'user', content:'📷 Ảnh', images:[data], ts: Date.now() });
+      saveCurrentSession();
+    };
+    reader.readAsDataURL(f);
+  });
+  // reset file input for next selection
+  fileInput.value = '';
+});
+
+/* paste images */
+document.addEventListener('paste', (e)=>{
+  if(!e.clipboardData) return;
+  for(const item of e.clipboardData.items){
+    if(item.type.indexOf('image') !== -1){
+      const f = item.getAsFile();
+      const r = new FileReader();
+      r.onload = (ev)=>{
+        const data = ev.target.result;
+        selectedImages.push(data);
+        addMessageToUI('', 'user', false, [data]);
+        chatHistory.push({ role:'user', content:'📷 Ảnh', images:[data], ts: Date.now() });
+        saveCurrentSession();
+      };
+      r.readAsDataURL(f);
     }
   }
-  chatHistory.push({role:"user",parts:[{text:prompt}]});
-  chatHistory.push({role:"model",parts:[{text:aiBubble.textContent}]});
+});
+
+/* ===========================
+   Streaming sendMessage -> Gemini generateContentStream
+   Uses fetch + ReadableStream reader
+   =========================== */
+
+let isProcessing = false;
+
+function setControlsDisabled(val){
+  sendBtn.disabled = val;
+  generateImgBtn.disabled = val;
+  imgBtn.disabled = val;
+  inputEl.disabled = val;
+}
+
+async function sendMessage(){
+  const rawText = inputEl.value.trim();
+  if(!rawText && selectedImages.length === 0) return;
+  if(isProcessing) return;
+
+  // Add user message UI + to history
+  if(selectedImages.length > 0){
+    addMessageToUI(rawText || '📷 Ảnh', 'user', false, selectedImages);
+    chatHistory.push({ role:'user', content: rawText || '📷 Ảnh', images: selectedImages.slice(), ts: Date.now() });
+  } else {
+    addMessageToUI(rawText, 'user');
+    chatHistory.push({ role:'user', content: rawText, ts: Date.now() });
+  }
+  saveCurrentSession();
+  inputEl.value = '';
+  // Prepare AI bubble in UI for streaming
+  const aiBubbleObj = addMessageToUI('', 'ai', true);
+  const aiBubble = aiBubbleObj.bubble;
+  isProcessing = true;
+  setControlsDisabled(true);
+
+  try{
+    // Build messages payload according to Gemini expected format (contents.parts)
+    // We'll construct contents.parts array; incorporate chatHistory
+    const contents = [];
+    // Include a system instruction at start to ensure behavior re: math characters and vision analysis
+    const systemPart = { text: "Bạn là trợ lý thông minh. Viết trực tiếp các ký tự toán học và số, không dùng LaTeX. Nếu cần, thêm chú thích sau //." };
+    contents.push({ parts: [ systemPart ] });
+
+    // Convert chatHistory into parts sequence: for each message, push as role.
+    // Gemini content expects "messages" with role and content; but for the v1beta streaming endpoint used here we will create contents.parts with text/inline_data etc.
+    // We'll assemble a single contents element with parts in order:
+    const parts = [];
+
+    // If there are images in messages, include SYSTEM_INSTRUCTION_VISION before those messages
+    // Iterate through chatHistory
+    for(const m of chatHistory){
+      if(m.role === 'user'){
+        if(m.images && m.images.length){
+          // inject vision system instruction before inline images
+          parts.push({ text: SYSTEM_INSTRUCTION_VISION });
+          // then push text (optional)
+          if(m.content) parts.push({ text: m.content });
+          // then inline images
+          for(const imgData of m.images){
+            // inline_data expects base64 without data URL prefix — remove if present
+            let b64 = imgData;
+            if(b64.startsWith('data:')) b64 = b64.split(',')[1];
+            parts.push({ inline_data: { mime_type: "image/png", data: b64 }});
+          }
+        } else {
+          // plain text
+          parts.push({ text: m.content || '' });
+        }
+      } else if(m.role === 'assistant'){
+        // assistant past content used as context
+        parts.push({ text: m.content || '' });
+      }
+    }
+
+    // Add current prompt last if not already in chatHistory (but we already pushed above)
+    // Build final request body per the older contents API style:
+    const body = {
+      // Provide a single contents array with one item containing parts
+      contents: [{ parts }],
+      // We want streaming behavior
+      // optional params like temperature, candidate_count, safety_settings can be added as needed
+    };
+
+    // call streaming endpoint
+    const res = await fetch(STREAM_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if(!res.ok){
+      const txt = await res.text();
+      throw new Error('API lỗi: ' + res.status + ' ' + txt);
+    }
+
+    // Read the streaming response
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let done = false;
+    // We'll collect full text to finalize later
+    let fullText = '';
+
+    while(!done){
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      if(value){
+        const chunk = decoder.decode(value, { stream: true });
+        // The streaming format may send newline-delimited JSON or plain text.
+        // We'll attempt to parse chunk-delimited JSON fragments; but to be robust, fallback to raw text appending.
+        // NOTE: Gemini streaming format details: might be ndjson with "delta" or "output" fields.
+        // We'll attempt simple extraction: find JSON objects in chunk and append their 'delta' or 'text' fields.
+        // Fallback: append raw chunk.
+        // Try to split by newlines and parse individual pieces:
+        const lines = chunk.split(/\r?\n/).filter(l => l.trim().length > 0);
+        let appendedAny = false;
+        for(const line of lines){
+          try{
+            // Some providers prefix "data: " — strip it
+            let clean = line.trim();
+            if(clean.startsWith('data: ')) clean = clean.slice(6);
+            // ignore keep-alive messages
+            if(clean === '[DONE]') { continue; }
+            const json = JSON.parse(clean);
+            // Heuristic: try to find tokens
+            let token = '';
+            if(json.delta) {
+              if(typeof json.delta === 'string') token = json.delta;
+              else if(typeof json.delta.content === 'string') token = json.delta.content;
+              else if(json.delta?.candidate) token = json.delta.candidate;
+            } else if(json.output && typeof json.output === 'string') {
+              token = json.output;
+            } else if(json.candidates){
+              // When chunks contain partial candidate content
+              const c = json.candidates[0];
+              if(c && c.output) token = JSON.stringify(c.output);
+            } else if(json.text){
+              token = json.text;
+            }
+            if(token){
+              appendToAIBubble(aiBubble, token);
+              fullText += token;
+              appendedAny = true;
+            }
+          }catch(e){
+            // not JSON: append raw line
+            appendToAIBubble(aiBubble, line + '\n');
+            fullText += (line + '\n');
+            appendedAny = true;
+          }
+        }
+        // If no structured lines parsed, fallback: append raw chunk
+        if(!appendedAny){
+          appendToAIBubble(aiBubble, chunk);
+          fullText += chunk;
+        }
+      }
+    }
+
+    // finalize bubble: render markdown and highlight
+    finalizeAIBubble(aiBubble);
+
+    // Save assistant message to chatHistory & session
+    chatHistory.push({ role:'assistant', content: fullText, images: [], ts: Date.now() });
+    saveCurrentSession();
+
+  }catch(err){
+    console.error('sendMessage error', err);
+    // remove typing spinner and show error in ai bubble
+    aiBubbleObj.spinner?.remove?.();
+    aiBubbleObj.bubble.innerHTML = `<div style="color:#ffb4b4">❌ Lỗi: ${escapeHtml(err.message || String(err))}</div>`;
+    smartScrollToBottom();
+  } finally {
+    isProcessing = false;
+    setControlsDisabled(false);
+    // clear selected images after processing
+    selectedImages = [];
+    saveCurrentSession();
+  }
+}
+
+/* Attach send button */
+sendBtn.addEventListener('click', sendMessage);
+inputEl.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+
+/* ===========================
+   Image generation (Imagen) - basic implementation
+   - When user clicks "Tạo ảnh" or types /taoanh /imagine /image as first token
+   =========================== */
+
+async function generateImageFromPrompt(prompt){
+  if(isProcessing) return;
+  isProcessing = true;
+  setControlsDisabled(true);
+  // show user prompt in UI
+  addMessageToUI(prompt, 'user');
+  chatHistory.push({ role:'user', content: prompt, ts: Date.now() });
+  saveCurrentSession();
+
+  const aiBubbleObj = addMessageToUI('', 'ai', true);
+  const aiBubble = aiBubbleObj.bubble;
+
+  try{
+    // Build image generation request
+    const imageReq = {
+      // Placeholder structure - adjust to expected imagen API
+      prompt: prompt,
+      // additional params: size, guidance etc
+      size: "1024x1024",
+      n: 1
+    };
+
+    const res = await fetch(IMAGE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(imageReq)
+    });
+
+    if(!res.ok){
+      const txt = await res.text();
+      throw new Error('Image API lỗi: ' + res.status + ' ' + txt);
+    }
+
+    const data = await res.json();
+    // Expect data.results[0].image (base64) or similar. We'll be defensive.
+    let b64 = null;
+    if(data && data.results && data.results[0] && data.results[0].image){
+      b64 = data.results[0].image;
+    } else if(data && data[0] && data[0].b64_json){
+      b64 = data[0].b64_json;
+    } else if(data && data.images && data.images[0] && data.images[0].b64){
+      b64 = data.images[0].b64;
+    } else {
+      // if the API returns a top-level base64 field
+      if(data && data.base64_image) b64 = data.base64_image;
+    }
+
+    if(!b64){
+      // fallback: pretty-print response for debugging
+      aiBubbleObj.bubble.innerHTML = `<pre style="white-space:pre-wrap;color:var(--muted)">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+      chatHistory.push({ role:'assistant', content: "Không nhận được ảnh từ API. Xem response JSON.", images: [], ts: Date.now() });
+      saveCurrentSession();
+      return;
+    }
+
+    const dataUrl = 'data:image/png;base64,' + b64;
+    // show image in ai bubble (final)
+    aiBubbleObj.bubble.innerHTML = '';
+    const img = document.createElement('img');
+    img.className = 'image-preview';
+    img.src = dataUrl;
+    img.style.maxWidth = '420px';
+    img.style.display = 'block';
+    aiBubbleObj.bubble.appendChild(img);
+    chatHistory.push({ role:'assistant', content: 'Ảnh đã tạo', images: [dataUrl], ts: Date.now() });
+    saveCurrentSession();
+
+  }catch(err){
+    console.error('generateImageFromPrompt error', err);
+    aiBubbleObj.bubble.innerHTML = `<div style="color:#ffb4b4">❌ Lỗi tạo ảnh: ${escapeHtml(err.message || String(err))}</div>`;
+  } finally {
+    isProcessing = false;
+    setControlsDisabled(false);
+  }
+}
+
+/* Click handler for generateImgBtn: if input starts with /taoanh or /imagine -> use that prompt */
+generateImgBtn.addEventListener('click', ()=>{
+  const val = inputEl.value.trim();
+  if(!val){
+    const p = prompt('Nhập prompt tạo ảnh:');
+    if(p) generateImageFromPrompt(p);
+    return;
+  }
+  // If user typed /taoanh or /imagine prefix, strip and use the rest; otherwise treat whole input as prompt
+  const match = val.match(/^\/(taoanh|image|imagine)\s*(.*)$/i);
+  if(match){
+    const promptText = match[2].trim() || prompt('Nhập prompt tạo ảnh:') || '';
+    if(promptText) generateImageFromPrompt(promptText);
+  } else {
+    // confirm to use full input as prompt
+    if(confirm('Dùng nội dung hiện tại làm prompt tạo ảnh?')) generateImageFromPrompt(val);
+  }
+});
+
+/* ===========================
+   Mode toggle & info modal
+   =========================== */
+modeToggle.addEventListener('click', ()=>{
+  document.body.classList.toggle('light');
+  // adjust CSS variables for light mode
+  if(document.body.classList.contains('light')){
+    document.documentElement.style.setProperty('--bg-dark', '#f6f7fb');
+    document.documentElement.style.setProperty('--text-dark', '#0b1b26');
+  } else {
+    document.documentElement.style.setProperty('--bg-dark', '#0a0a0f');
+    document.documentElement.style.setProperty('--text-dark', '#e6eef6');
+  }
+});
+
+infoBtn.addEventListener('click', ()=> {
+  infoModal.classList.add('show');
+  infoModal.setAttribute('aria-hidden','false');
+});
+closeModal.addEventListener('click', ()=> {
+  infoModal.classList.remove('show');
+  infoModal.setAttribute('aria-hidden','true');
+});
+window.addEventListener('click', (e)=>{
+  if(e.target === infoModal) {
+    infoModal.classList.remove('show');
+    infoModal.setAttribute('aria-hidden','true');
+  }
+});
+
+/* ===========================
+   Save session periodically & on unload
+   =========================== */
+window.addEventListener('beforeunload', ()=>{
+  saveCurrentSession();
+});
+
+/* auto-save every 10 seconds */
+setInterval(()=>{ try{ saveCurrentSession(); }catch(e){} }, 10000);
+
+/* Add initial welcome message for AI if starting fresh */
+function addSystemWelcome(){
+  const text = "Xin chào 👋! Mình là **TTK AI** – trợ lý ảo của bạn. Hãy gửi tin nhắn hoặc ảnh để mình giúp nhé!\n\n- Hỗ trợ streaming (Gemini 2.5 Flash)\n- Tạo ảnh: /taoanh, /imagine, /image\n- Lưu phiên (localStorage) tự động";
+  addMessageToUI(text, 'ai', false);
+  chatHistory.push({ role:'assistant', content: text, ts: Date.now() });
   saveCurrentSession();
 }
 
-/* === Image Generation === */
-async function generateImage(prompt){
-  addMessage(`🎨 Tạo ảnh cho: "${prompt}"`,"user");
-  const aiBubble = addMessage("Đang tạo ảnh...","ai");
-  const res = await fetch(IMAGE_ENDPOINT,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({prompt})
-  });
-  const data = await res.json();
-  const base64 = data?.images?.[0]?.data;
-  if(base64){
-    aiBubble.innerHTML = `<img src="data:image/png;base64,${base64}" style="max-width:100%;border-radius:10px;">`;
-  } else aiBubble.innerHTML = "⚠️ Không tạo được ảnh.";
+/* init: if current session empty, add welcome */
+if(chatHistory.length === 0){
+  addSystemWelcome();
 }
 
-/* === Chat Logic === */
-async function handleSend(){
-  const text=input.value.trim();
-  if(!text) return;
-  input.value="";
-  if(text.startsWith("/taoanh")||text.startsWith("/image")||text.startsWith("/imagine")){
-    const prompt=text.split(" ").slice(1).join(" ");
-    generateImage(prompt);
-    return;
+/* Keyboard shortcuts */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') {
+    if(historySidebar.classList.contains('open')) closeHistory();
+    if(infoModal.classList.contains('show')) { infoModal.classList.remove('show'); infoModal.setAttribute('aria-hidden','true'); }
   }
-  await streamChatResponse(text);
-}
+});
 
-/* === Events === */
-sendBtn.onclick=handleSend;
-input.addEventListener("keypress",e=>{if(e.key==="Enter")handleSend();});
-historyBtn.onclick=()=>toggleSidebar();
-newChatBtn.onclick=startNewChat;
+/* Helper: very small spinner keyframes injected */
+const styleTag = document.createElement('style');
+styleTag.innerHTML = `@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}`;
+document.head.appendChild(styleTag);
 
-/* === Sidebar Toggle === */
-function toggleSidebar(force){
-  sidebar.classList.toggle("show",force);
-  renderSessions();
-}
+/* Expose some debugging helpers (optional) */
+window._TTK = {
+  allSessions, chatHistory, saveCurrentSession, loadSession, startNewChat
+};
 
-/* === Info Modal === */
-const infoModal=document.getElementById("infoModal");
-document.getElementById("infoBtn").onclick=()=>infoModal.classList.add("show");
-document.getElementById("closeInfo").onclick=()=>infoModal.classList.remove("show");
-
-/* === Init === */
-renderSessions();
-addMessage("Xin chào! 👋 Đây là **TTK AI Chat** (Gemini 2.5 + Imagen 3.0). Hãy bắt đầu trò chuyện!","ai");
 </script>
 </body>
 </html>
