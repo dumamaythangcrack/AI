@@ -444,14 +444,15 @@ header .logo-area span{ font-size:0.9em; opacity:0.7; color: var(--text-dark);}
 }
 .history-header h2 { font-family: 'Orbitron', monospace; flex: 1; }
 .history-header .new-chat-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: 0.3s;
+  **margin-right: 15px;** /* Thêm khoảng cách bên phải */
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
 }
 .history-header .new-chat-btn:hover { background: var(--accent-hover); }
 
@@ -646,7 +647,7 @@ body.light .toast { background: rgba(255,255,255,0.95); color: var(--text-light)
   <div class="history-modal-content">
     <div class="history-header">
       <h2 id="historyTitle">Lịch sử Chat</h2>
-      <button class="new-chat-btn" id="newChatBtn">+ Chat Mới</button>
+      <button class="new-chat-btn" id="newChatBtn">+ chat mới</button>
       <button class="close-btn" id="closeHistoryModal" aria-label="Đóng">&times;</button>
       <input type="text" class="history-search" id="historySearch" placeholder="Tìm kiếm..." aria-label="Tìm kiếm phiên chat">
     </div>
@@ -1800,6 +1801,7 @@ Example allSessions after user has 2 conversations:
 </script>
 </body>
 </html>
+
 
 
 
