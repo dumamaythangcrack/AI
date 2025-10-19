@@ -661,14 +661,15 @@ body.light .toast { background: rgba(255,255,255,0.95); color: var(--text-light)
 'use strict';
 
 // ===== CONFIGURATION & CONSTANTS =====
-// ...
+// ===== CONFIGURATION & CONSTANTS SỬA LỖI MODEL API V1.0 =====
 const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
-const MODEL = "gemini-1.5-flash"; // <<<< LỖI NẰM Ở ĐÂY
+// Đã sửa lỗi: Thay 'gemini-1.5-flash' bằng tên mô hình công khai chính xác là 'gemini-2.5-flash'
+const MODEL = "gemini-2.5-flash"; 
 const CHAT_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`;
-// ...
 const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/imagen-3.0-generate-002:generateImage?key=${API_KEY}`;
 const STORAGE_KEY = 'gpt_sessions_v1';
 const LAST_SESSION_KEY = 'last_session_id';
+// ... giữ nguyên các hằng số khác
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_DOM_MESSAGES = 200;
 
@@ -1799,6 +1800,7 @@ Example allSessions after user has 2 conversations:
 </script>
 </body>
 </html>
+
 
 
 
