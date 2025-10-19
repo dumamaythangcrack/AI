@@ -443,16 +443,15 @@ header .logo-area span{ font-size:0.9em; opacity:0.7; color: var(--text-dark);}
   gap: 10px;
 }
 .history-header h2 { font-family: 'Orbitron', monospace; flex: 1; }
-  
 .history-header .new-chat-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: 0.3s;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
 }
 .history-header .new-chat-btn:hover { background: var(--accent-hover); }
 
@@ -647,7 +646,7 @@ body.light .toast { background: rgba(255,255,255,0.95); color: var(--text-light)
   <div class="history-modal-content">
     <div class="history-header">
       <h2 id="historyTitle">Lịch sử Chat</h2>
-      <button class="new-chat-btn" id="newChatBtn">+ chat mới</button>
+      <button class="new-chat-btn" id="newChatBtn">+ Chat Mới</button>
       <button class="close-btn" id="closeHistoryModal" aria-label="Đóng">&times;</button>
       <input type="text" class="history-search" id="historySearch" placeholder="Tìm kiếm..." aria-label="Tìm kiếm phiên chat">
     </div>
@@ -662,15 +661,12 @@ body.light .toast { background: rgba(255,255,255,0.95); color: var(--text-light)
 'use strict';
 
 // ===== CONFIGURATION & CONSTANTS =====
-// ===== CONFIGURATION & CONSTANTS SỬA LỖI MODEL API V1.0 =====
 const API_KEY = "AIzaSyCrzfPbVtDLKBAsdKO31vdHysBb8JDQYUU";
-// Đã sửa lỗi: Thay 'gemini-1.5-flash' bằng tên mô hình công khai chính xác là 'gemini-2.5-flash'
-const MODEL = "gemini-2.5-flash"; 
-const CHAT_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`;
-const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/imagen-3.0-generate-002:generateImage?key=${API_KEY}`;
+const MODEL = "gemini-2.5-flash";
+const CHAT_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`;
+const IMAGE_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${API_KEY}`;
 const STORAGE_KEY = 'gpt_sessions_v1';
 const LAST_SESSION_KEY = 'last_session_id';
-// ... giữ nguyên các hằng số khác
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_DOM_MESSAGES = 200;
 
@@ -1752,7 +1748,7 @@ Example allSessions after user has 2 conversations:
       }
     ],
     "metadata": {
-      "model": "gemini-1.5-flash-latest",
+      "model": "-latest",
       "language": "vi",
       "pinned": false
     }
@@ -1791,7 +1787,7 @@ Example allSessions after user has 2 conversations:
       }
     ],
     "metadata": {
-      "model": "gemini-1.5-flash-latest",
+      "model": "-latest",
       "language": "vi",
       "pinned": false
     }
@@ -1801,13 +1797,3 @@ Example allSessions after user has 2 conversations:
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
